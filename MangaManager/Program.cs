@@ -41,8 +41,14 @@ namespace MangaManager
                 if (options.Move) 
                     RunProcessors(workingFiles, FileProcessors.Movers, View.MovingProgress);
 
-                if(options.Tag)
+                if (options.Scrap)
+                    RunProcessors(workingFiles, FileProcessors.Scappers, View.ScrappingProgress);
+
+                if (options.Tag)
                     RunProcessors(workingFiles, FileProcessors.Taggers, View.TaggingProgress);
+
+                if (options.OnlineUpdate)
+                    RunProcessors(workingFiles, FileProcessors.OnlineLibraryUpdaters, View.OnlineUpdatingProgress);
 
                 if (options.Archive)
                     RunProcessors(workingFiles, FileProcessors.Archivers, View.ArchivingingProgress);

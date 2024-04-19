@@ -1,7 +1,9 @@
 ﻿using MangaManager.Tasks.Archive;
 using MangaManager.Tasks.Convert.Converter;
 using MangaManager.Tasks.Move;
+using MangaManager.Tasks.OnlineLibraryUpdater;
 using MangaManager.Tasks.Rename;
+using MangaManager.Tasks.Scrap;
 using MangaManager.Tasks.Tag;
 
 namespace MangaManager.Tasks
@@ -27,9 +29,19 @@ namespace MangaManager.Tasks
             new ToRootFolderMover(),
         ];
 
+        public static IFileProcessor[] Scappers =
+        [
+            new MangaCollecScrapper(),
+        ];
+
         public static IFileProcessor[] Taggers =
         [
             new AddComicInfoTagger(),
+        ];
+
+        public static IFileProcessor[] OnlineLibraryUpdaters =
+        [
+            new MangaCollecLibraryUpdater(),
         ];
 
         public static IFileProcessor[] Archivers =

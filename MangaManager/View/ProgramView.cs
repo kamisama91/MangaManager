@@ -1,4 +1,5 @@
 ﻿using Konsole;
+using System;
 
 namespace MangaManager.View
 {
@@ -9,12 +10,14 @@ namespace MangaManager.View
         private IProgressBar _convertProgressBar;
         private IProgressBar _renameProgressBar;
         private IProgressBar _moveProgressBar;
+        private IProgressBar _scrapProgressBar;
         private IProgressBar _tagProgressBar;
+        private IProgressBar _onlineUpdateProgressBar;
         private IProgressBar _archiveProgressBar;
 
         public ProgramView() 
         {
-            var windows = Window.OpenBox("Manga Manager v1.0", 120, 29);
+            var windows = Window.OpenBox("Manga Manager v1.0", 120, 35);
             var tasks = windows.SplitTop("Tasks");
             var bottom = windows.SplitBottom();
             _logs = bottom.SplitRight("Logs");
@@ -22,7 +25,9 @@ namespace MangaManager.View
             _convertProgressBar = Program.Options.Convert ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Convert ".PadRight(15)) : default;
             _renameProgressBar = Program.Options.Rename ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Rename ".PadRight(15)) : default;
             _moveProgressBar = Program.Options.Move ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Move ".PadRight(15)) : default;
+            _scrapProgressBar = Program.Options.Scrap ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Scrap ".PadRight(15)) : default;
             _tagProgressBar = Program.Options.Tag ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Tag ".PadRight(15)) : default;
+            _onlineUpdateProgressBar = Program.Options.OnlineUpdate ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Online upd. ".PadRight(15)) : default;
             _archiveProgressBar = Program.Options.Archive ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Archive ".PadRight(15)) : default;
         }
 
@@ -38,9 +43,17 @@ namespace MangaManager.View
         {
             RefreshProgressBar(_moveProgressBar, current, total, description);
         }
+        public void ScrappingProgress(int current, int total, string description)
+        {
+            RefreshProgressBar(_scrapProgressBar, current, total, description);
+        }
         public void TaggingProgress(int current, int total, string description)
         {
             RefreshProgressBar(_tagProgressBar, current, total, description);
+        }
+        public void OnlineUpdatingProgress(int current, int total, string description)
+        {
+            RefreshProgressBar(_onlineUpdateProgressBar, current, total, description);
         }
         public void ArchivingingProgress(int current, int total, string description)
         {
@@ -52,7 +65,7 @@ namespace MangaManager.View
             if (progressBar != null)
             {
                 var percent = 100m * (total == 0 ? 1m : current / (decimal)total);
-                progressBar.Refresh((int)percent, description);
+                progressBar.Refresh((int)percent, description.Substring(0, Math.Min(description.Length, 110)));
             }
         }
 
