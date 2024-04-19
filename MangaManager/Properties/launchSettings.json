@@ -2,7 +2,7 @@
   "profiles": {
     "Debug": {
       "commandName": "Project",
-      "commandLineArgs": "--input \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\""
+      "commandLineArgs": "--input \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\" --output \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\\__archive\" --quarantine \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\\__quarantine\" --convert --rename --move --tag --archive"
     }
   }
 }
