@@ -45,6 +45,7 @@ x64/
 *.scc
 
 # Visual C++ cache files
+.vs/
 ipch/
 *.aps
 *.ncb
@@ -70,7 +71,6 @@ publish/
 
 # Publish Web Output
 *.Publish.xml
-*.pubxml
 *.azurePubxml
 
 # NuGet Packages Directory

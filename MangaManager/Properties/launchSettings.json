@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Debug": {
+      "commandName": "Project",
+      "commandLineArgs": "--input \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\""
+    }
+  }
+}
