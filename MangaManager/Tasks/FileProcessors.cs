@@ -38,9 +38,13 @@ namespace MangaManager.Tasks
         ];
     }
 
-    public interface IFileProcessor
+    public interface IFileProvider
     {
         public string[] GetFiles();
+    }
+
+    public interface IFileProcessor
+    {
         public bool Accept(string file);
         public bool ProcessFile(string file, out string newFile);
     }

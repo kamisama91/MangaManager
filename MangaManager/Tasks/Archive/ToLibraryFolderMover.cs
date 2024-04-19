@@ -8,11 +8,6 @@ namespace MangaManager.Tasks.Archive
 {
     public class ToLibraryFolderMover : IFileProcessor
     {
-        public string[] GetFiles()
-        {
-            throw new NotImplementedException();
-        }
-
         public bool Accept( string file)
         {
             return Path.GetExtension(file) == ".cbz"  && ArchiveHelper.HasComicInfo(file);

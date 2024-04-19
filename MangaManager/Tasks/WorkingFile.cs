@@ -10,6 +10,7 @@ namespace MangaManager.Tasks
         {
             //Only accept convertible files
             return FileProcessors.Converters
+                    .OfType<IFileProvider>()
                     .SelectMany(convertor => convertor.GetFiles())
                     .Distinct()
                     .OrderBy(_ => _)

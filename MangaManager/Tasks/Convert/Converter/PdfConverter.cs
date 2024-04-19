@@ -6,7 +6,7 @@ using UglyToad.PdfPig;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
-    public class PdfConverter : IFileProcessor
+    public class PdfConverter : IFileProvider, IFileProcessor
     {
         private List<string> _acceptdExtensions = new List<string> { ".pdf" };
 

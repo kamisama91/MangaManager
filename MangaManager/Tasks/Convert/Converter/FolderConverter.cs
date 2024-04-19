@@ -8,7 +8,7 @@ using MangaManager.Models;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
-    public class FolderConverter : IFileProcessor
+    public class FolderConverter : IFileProvider, IFileProcessor
     {
         public string[] GetFiles()
         {

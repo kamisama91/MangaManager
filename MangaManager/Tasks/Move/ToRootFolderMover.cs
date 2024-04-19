@@ -5,11 +5,6 @@ namespace MangaManager.Tasks.Move
 {
     public class ToRootFolderMover : IFileProcessor
     {
-        public string[] GetFiles()
-        {
-            throw new NotImplementedException();
-        }
-
         public bool Accept(string file)
         {
             return Path.GetExtension(file) == ".cbz";

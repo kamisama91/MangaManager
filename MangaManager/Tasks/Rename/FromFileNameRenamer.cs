@@ -8,11 +8,6 @@ namespace MangaManager.Tasks.Rename
 {
     public class FromFileNameRenamer : IFileProcessor
     {
-        public string[] GetFiles()
-        {
-            throw new NotImplementedException();
-        }
-
         public bool Accept(string file)
         {
             return Path.GetExtension(file) == ".cbz";

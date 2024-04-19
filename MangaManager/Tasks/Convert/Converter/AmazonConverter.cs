@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
-    public class AmazonConverter : IFileProcessor
+    public class AmazonConverter : IFileProvider, IFileProcessor
     {
         private List<string> _acceptdExtensions = new List<string> { ".mobi", ".prc", ".azw", ".azw3", ".azw4" /*, ".azw6", ".azw.res", ".kfx" */};
 

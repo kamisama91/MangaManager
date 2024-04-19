@@ -9,11 +9,6 @@ namespace MangaManager.Tasks.Tag
 {
     public class AddComicInfoTagger : IFileProcessor
     {
-        public string[] GetFiles()
-        {
-            throw new NotImplementedException();
-        }
-
         public bool Accept(string file)
         {
             return Path.GetExtension(file) == ".cbz" && (Program.Options.TagForce || !ArchiveHelper.HasComicInfo(file));

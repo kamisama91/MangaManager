@@ -7,7 +7,7 @@ using System;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
-    public class EpubConverter : IFileProcessor
+    public class EpubConverter : IFileProvider, IFileProcessor
     {
         private List<string> _acceptdExtensions = new List<string> { ".epub" };
 

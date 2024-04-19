@@ -7,7 +7,7 @@ using SharpCompress.Archives;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
-    public class ArchiveConverter : IFileProcessor
+    public class ArchiveConverter : IFileProvider, IFileProcessor
     {
         private List<string> _acceptdExtensions = new List<string> { ".c7z", ".7z", ".cbr", ".rar", ".cbz", ".zip", };
 
