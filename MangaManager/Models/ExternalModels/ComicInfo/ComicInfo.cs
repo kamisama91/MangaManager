@@ -28,7 +28,7 @@ namespace MangaManager.Models
         public string LanguageISO { get; set; } = "fr";
         public string Manga { get; set; } = "Yes";        
 
-        public static ComicInfo FromXmlStream (Stream inputStream)
+        public static ComicInfo FromXmlStream (MemoryStream inputStream)
         {
             inputStream.Position = 0;
             var serializer = new XmlSerializer(typeof(ComicInfo));
@@ -38,7 +38,7 @@ namespace MangaManager.Models
             return comicInfo;
         }
 
-        public Stream ToXmlStream()
+        public MemoryStream ToXmlStream()
         {
             var outputStream = new MemoryStream();
             var serializer = new XmlSerializer(typeof(ComicInfo));

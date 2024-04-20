@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using MangaManager.Models;
-using SharpCompress;
 
 namespace MangaManager.Tasks.Archive
 {
@@ -15,8 +14,8 @@ namespace MangaManager.Tasks.Archive
                 return false; 
             }
 
-            var workingFileName = workItem.FilePath;
-            return Path.GetExtension(workingFileName) == ".cbz"  && ArchiveHelper.HasComicInfo(workingFileName);
+            var archiveInfo = ArchiveHelper.GetOrCreateArchiveInfo(workItem.FilePath);
+            return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && archiveInfo.HasComicInfo;
         }
 
         private string BuildSerieNameFromComicInfo(ComicInfo info)
@@ -57,7 +56,7 @@ namespace MangaManager.Tasks.Archive
         {
             var file = workItem.FilePath;
 
-            var comicInfo = ArchiveHelper.GetComicInfo(file);
+            var comicInfo = ArchiveHelper.GetOrCreateArchiveInfo(workItem.FilePath).ComicInfo;
             
             //Guess Library Folder name
             var folderName = BuildSerieNameFromComicInfo(comicInfo);
@@ -79,10 +78,10 @@ namespace MangaManager.Tasks.Archive
             //Rename Library Folder when serie is complete
             if (archiveFolderPath != archiveCompleteFolderPath)
             {
-                var comicInfosKeys = Directory.EnumerateFiles(archiveFolderPath, "*.cbz", SearchOption.TopDirectoryOnly).ToArray();
-                var comicInfos = comicInfosKeys
-                    .Where(file => ArchiveHelper.HasComicInfo(file))
-                    .Select(file => ArchiveHelper.GetComicInfo(file))
+                var comicInfos = Directory.EnumerateFiles(archiveFolderPath, "*.cbz", SearchOption.TopDirectoryOnly)
+                    .Select(f => ArchiveHelper.GetOrCreateArchiveInfo(f))
+                    .Where(f => f.HasComicInfo)
+                    .Select(f => f.ComicInfo)
                     .ToList();
 
                 var lastVolume = comicInfos.Where(ci => !string.IsNullOrEmpty(ci.Count))
@@ -98,11 +97,9 @@ namespace MangaManager.Tasks.Archive
 
                     if (allVolumesPresent)
                     {
-                        Directory.Move(archiveFolderPath, archiveCompleteFolderPath);
-                        comicInfosKeys.ForEach(file => CacheComicInfos.UpdatePath(file, file.Replace(archiveFolderPath, archiveCompleteFolderPath)));
+                        FileHelper.Move(archiveFolderPath, archiveCompleteFolderPath);
                         archiveFilePath = Path.Combine(archiveCompleteFolderPath, $"{fileName}.cbz");
                         archiveFolderPath = archiveCompleteFolderPath;
-                        
                     }
                 }
             }

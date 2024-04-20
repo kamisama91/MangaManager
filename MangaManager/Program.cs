@@ -55,7 +55,10 @@ namespace MangaManager
                     RunSingleThread(producer, consumers);
 
                 var duration = DateTime.Now - startTime;
-                View.Info($"Finished: {Math.Floor(duration.TotalSeconds / 60)} min {Math.Floor(duration.TotalSeconds % 60)} sec");
+                View.Info($"Finished:");
+                View.Info($"   Time:  {Math.Floor(duration.TotalSeconds / 60)} min {Math.Floor(duration.TotalSeconds % 60)} sec");
+                View.Info($"   Items: {WorkItem.InstancesCount}");
+                View.Info($"   Cache: {CacheArchiveInfos.Hits} Hits / {CacheArchiveInfos.Misses} Misses");
             }
             catch (Exception)
             {

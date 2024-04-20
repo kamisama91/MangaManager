@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using SharpCompress;
 
 namespace MangaManager.Tasks
@@ -61,36 +62,50 @@ namespace MangaManager.Tasks
             return osCompliantName;
         }
 
-        public static void Move(string filePath, string newFilePath)
+        public static void Move(string path, string newPath)
         {
-            if (newFilePath == filePath)
+            if (newPath == path)
             {
                 return;
             }
 
-            if (File.Exists(newFilePath))
+            if (Directory.Exists(path))
             {
-                throw new InvalidOperationException($"{newFilePath} already exists");
-            }
-
-            File.Move(filePath, newFilePath);
-
-            //Cleanup empty Source directory tree
-            var sourcefolder = Path.GetDirectoryName(filePath);
-            while (sourcefolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.SourceFolder.TrimEnd(Path.DirectorySeparatorChar)
-                && (string.IsNullOrEmpty(Program.Options.ArchiveFolder) || sourcefolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.ArchiveFolder.TrimEnd(Path.DirectorySeparatorChar))
-                && (string.IsNullOrEmpty(Program.Options.QuarantineFolder) || sourcefolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.QuarantineFolder.TrimEnd(Path.DirectorySeparatorChar)))
-            {
-                //Cleanup Empty source folder
-                if (Directory.GetFiles(sourcefolder).Length == 0
-                 && Directory.GetDirectories(sourcefolder).Length == 0)
+                if (Directory.Exists(newPath))
                 {
-                    Directory.Delete(sourcefolder, false);
+                    throw new InvalidOperationException($"{newPath} already exists");
                 }
-                sourcefolder = Path.GetFullPath(Path.Combine(sourcefolder, ".."));
-            }
 
-            CacheComicInfos.UpdatePath(filePath, newFilePath);
+                Directory.Move(path, newPath);
+                Directory.EnumerateFiles(newPath)
+                         .ForEach(file => CacheArchiveInfos.UpdatePath(file.Replace(newPath, path), file));
+            }
+            else if (File.Exists(path))
+            {
+                if (File.Exists(newPath))
+                {
+                    throw new InvalidOperationException($"{newPath} already exists");
+                }
+
+                File.Move(path, newPath);
+                CacheArchiveInfos.UpdatePath(path, newPath);
+
+                var sourcefolder = Path.GetDirectoryName(path);
+                while (sourcefolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.SourceFolder.TrimEnd(Path.DirectorySeparatorChar)
+                    && (string.IsNullOrEmpty(Program.Options.ArchiveFolder) || sourcefolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.ArchiveFolder.TrimEnd(Path.DirectorySeparatorChar))
+                    && (string.IsNullOrEmpty(Program.Options.QuarantineFolder) || sourcefolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.QuarantineFolder.TrimEnd(Path.DirectorySeparatorChar)))
+                {
+                    if (Directory.EnumerateFiles(sourcefolder).Any() || Directory.EnumerateDirectories(sourcefolder).Any())
+                    {
+                        //Not empty, no need to continue
+                        break;
+                    }
+
+                    //Cleanup Empty source folder
+                    Directory.Delete(sourcefolder, false);
+                    sourcefolder = Path.GetFullPath(Path.Combine(sourcefolder, ".."));
+                }
+            }
         }
     }
 }

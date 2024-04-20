@@ -13,63 +13,40 @@ namespace MangaManager.Tasks
 {
     public static class ArchiveHelper
     {
-        public static bool IsZipArchive(string archiveFile)
+        private static ArchiveInfo BuildArchiveInfo (string archiveFile)
         {
+            var archiveInfo = new ArchiveInfo();
             using (var archive = ArchiveFactory.Open(archiveFile))
             {
-                return archive.Type == ArchiveType.Zip;
-            }
-        }
+                archiveInfo.IsZip = (archive.Type == ArchiveType.Zip);
+                archiveInfo.HasSubdirectories = archive.Entries.Any(e => e.IsDirectory);
 
-        public static bool HasSubdirectories(string archiveFile)
-        {
-            using (var archive = ArchiveFactory.Open(archiveFile))
-            {
-                return archive.Entries.Any(e => e.IsDirectory);
-            }
-        }
-
-        public static bool HasComicInfo(string archiveFile)
-        {
-            if (CacheComicInfos.Exists(archiveFile)) 
-            { 
-                return CacheComicInfos.Get(archiveFile) != null;
-            }
-
-            using (var archive = ArchiveFactory.Open(archiveFile))
-            {
-                var hasComicInfo = archive.Entries.Any(e => !e.IsDirectory && e.Key.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase));
-                CacheComicInfos.CreateOrUpdate(archiveFile, hasComicInfo ? ComicInfo.Empty : null);
-                return hasComicInfo;
-            }
-        }
-
-        public static ComicInfo GetComicInfo(string archiveFile)
-        {
-            if (CacheComicInfos.Get(archiveFile) != ComicInfo.Empty)
-            {
-                return CacheComicInfos.Get(archiveFile);
-            }
-
-            using (var archive = ArchiveFactory.Open(archiveFile))
-            {
                 var entry = archive.Entries.SingleOrDefault(e => !e.IsDirectory && e.Key.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase));
-                using var entryMemoryStream = new MemoryStream();
-                entry.OpenEntryStream().CopyTo(entryMemoryStream);
-                var comicInfo = ComicInfo.FromXmlStream(entryMemoryStream);
-                CacheComicInfos.CreateOrUpdate(archiveFile, comicInfo);
-                return comicInfo;
+                if (entry != null)
+                {
+                    using var entryMemoryStream = new MemoryStream();
+                    entry.OpenEntryStream().CopyTo(entryMemoryStream);
+                    archiveInfo.ComicInfo = ComicInfo.FromXmlStream(entryMemoryStream);
+                }
             }
+            return archiveInfo;
         }
 
-        public static void SetComicInfo(string archiveFile, ComicInfo comicInfo)
+        public static ArchiveInfo GetOrCreateArchiveInfo(string archiveFile)
         {
-            UpdateZipWithArchiveItemStreams(archiveFile, createdItems: new[] { new ArchiveItemStream { FileName = ComicInfo.NAME, Stream = comicInfo.ToXmlStream() } });
-            CacheComicInfos.CreateOrUpdate(archiveFile, comicInfo);
+            if (CacheArchiveInfos.Exists(archiveFile))
+            {
+                return CacheArchiveInfos.Get(archiveFile);
+            }
+
+            var archiveInfo = BuildArchiveInfo(archiveFile);
+            CacheArchiveInfos.CreateOrUpdate(archiveFile, archiveInfo);
+            return archiveInfo;
         }
 
         public static bool CreateZipFromArchiveItemStreams(string sourceFile, string outputFile, Func<string, IEnumerable<ArchiveItemStream>> extractArchiveItemStreams)
         {
+            ComicInfo comicInfo = null;
             try
             {
                 using (var archive = new Ionic.Zip.ZipFile(outputFile))
@@ -83,11 +60,18 @@ namespace MangaManager.Tasks
                             fileName = $"{i:00000}.{archiveItemStream.Extension}";
                             i++;
                         }
-                        using (var reader = new BinaryReader(archiveItemStream.Stream))
+                        else
                         {
-                            archive.AddEntry(fileName, reader.ReadBytes((int)archiveItemStream.Stream.Length));
-                            archiveItemStream.Clear();    //Free memory
+                            if (fileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                comicInfo = ComicInfo.FromXmlStream(archiveItemStream.Stream);
+                            }
                         }
+
+                        var bytes = new byte[archiveItemStream.Stream.Length];
+                        archiveItemStream.Stream.Read(bytes, 0, bytes.Length);
+                        archive.AddEntry(fileName, bytes);
+                        archiveItemStream.Clear();
                     }
                     archive.Save();
                 }
@@ -98,6 +82,15 @@ namespace MangaManager.Tasks
                 File.Delete(outputFile);
                 return false;
             }
+
+            var archiveInfo = new ArchiveInfo()
+            {
+                IsZip = true,
+                HasSubdirectories = false,
+                ComicInfo = comicInfo
+            };
+            CacheArchiveInfos.CreateOrUpdate(outputFile, archiveInfo);
+
             return true; 
         }
 
@@ -108,6 +101,7 @@ namespace MangaManager.Tasks
                 return true;
             }
 
+            ComicInfo comicInfo = null;
             using (var archive = Ionic.Zip.ZipFile.Read(sourceFile))
             {
                 if (createdItems != null)
@@ -116,11 +110,14 @@ namespace MangaManager.Tasks
                     archive.Where(e => newEntriesKey.Contains(e.FileName)).ToArray().ForEach(archive.RemoveEntry);
                     foreach (var archiveItemStream in createdItems)
                     {
-                        using (var reader = new BinaryReader(archiveItemStream.Stream))
+                        if (archiveItemStream.FileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
                         {
-                            archive.AddEntry(archiveItemStream.FileName, reader.ReadBytes((int)archiveItemStream.Stream.Length));
-                            archiveItemStream.Clear();    //Free memory
+                             comicInfo = ComicInfo.FromXmlStream(archiveItemStream.Stream);
                         }
+                        var bytes = new byte[archiveItemStream.Stream.Length];
+                        archiveItemStream.Stream.Read(bytes, 0, bytes.Length);
+                        archive.AddEntry(archiveItemStream.FileName, bytes);
+                        archiveItemStream.Clear();
                     }
                 }
 
@@ -129,16 +126,31 @@ namespace MangaManager.Tasks
                     foreach (var entry in archive.Where(e => renamedItems.ContainsKey(e.FileName)).ToArray())
                     {
                         entry.FileName = renamedItems[entry.FileName];
+                        if (entry.FileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            using var entryMemoryStream = new MemoryStream();
+                            using var inputStream = entry.OpenReader();
+                            inputStream.CopyTo(entryMemoryStream);
+                            comicInfo = ComicInfo.FromXmlStream(entryMemoryStream);
+                        }
                     }
                 }
 
                 if (deletedItems != null)
                 {
                     archive.Where(e => deletedItems.Contains(e.FileName)).ToArray().ForEach(archive.RemoveEntry);
+                    if (deletedItems.Any(f => f.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        comicInfo = null;
+                    }
                 }
 
                 archive.Save();
             }
+
+            var archiveInfo = GetOrCreateArchiveInfo(sourceFile);
+            archiveInfo.HasSubdirectories = false;
+            archiveInfo.ComicInfo = comicInfo;
 
             return true;
         }

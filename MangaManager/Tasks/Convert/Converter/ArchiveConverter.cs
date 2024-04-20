@@ -31,14 +31,14 @@ namespace MangaManager.Tasks.Convert.Converter
 
         public bool Process(WorkItem workItem)
         {
-            var workingFile = workItem.FilePath;
+            var archiveInfo = ArchiveHelper.GetOrCreateArchiveInfo(workItem.FilePath);
 
-            if (!ArchiveHelper.IsZipArchive(workingFile))
+            if (!archiveInfo.IsZip)
             {
                 return ConvertToCbz(workItem);
             }
 
-            if (ArchiveHelper.HasSubdirectories(workingFile))
+            if (archiveInfo.HasSubdirectories)
             {
                 return FlattenCbz(workItem);
             }

@@ -4,7 +4,7 @@ namespace MangaManager.Tasks.Convert
 {
     public class ArchiveItemStream
     {
-        public Stream Stream { get; set; }
+        public MemoryStream Stream { get; set; }
         public string FileName { get; set; }
         public string Extension { get; set; }
 
@@ -16,6 +16,6 @@ namespace MangaManager.Tasks.Convert
             Extension = null;
         }
 
-        public static implicit operator Stream(ArchiveItemStream i) => i.Stream;
+        public static implicit operator MemoryStream(ArchiveItemStream i) => i.Stream;
     }
 }

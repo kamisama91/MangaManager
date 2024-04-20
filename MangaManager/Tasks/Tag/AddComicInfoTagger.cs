@@ -1,4 +1,5 @@
 ﻿using MangaManager.Models;
+using MangaManager.Tasks.Convert;
 using MangaManager.Tasks.Rename;
 using System.IO;
 using System.Linq;
@@ -15,17 +16,17 @@ namespace MangaManager.Tasks.Tag
                 return false;
             }
 
-            var workingFileName = workItem.FilePath;
-            return Path.GetExtension(workingFileName) == ".cbz" && (Program.Options.TagForce || !ArchiveHelper.HasComicInfo(workingFileName));
+            var archiveInfo = ArchiveHelper.GetOrCreateArchiveInfo(workItem.FilePath);
+            return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && (Program.Options.TagForce || !archiveInfo.HasComicInfo);
         }
 
         public bool Process(WorkItem workItem)
         {
             var file = workItem.FilePath;
 
-            var filename = Path.GetFileNameWithoutExtension(file);
-            var serie = FromFileNameRenamer.ExtractSerie(filename);
-            var volume = FromFileNameRenamer.ExtractVolume(filename);
+            var parsedFileName = FileNameParser.Parse(Path.GetFileNameWithoutExtension(file));
+            var serie = parsedFileName.Serie;
+            var volume = parsedFileName.Volume;
 
             ///TODO
             //Matching by GetOsCompliantName => what if many edition for same serie (...)
@@ -91,7 +92,7 @@ namespace MangaManager.Tasks.Tag
                 comicInfo.Day = volumeInfo.ReleaseDate.Day.ToString();
             }
 
-            ArchiveHelper.SetComicInfo(file, comicInfo);
+            ArchiveHelper.UpdateZipWithArchiveItemStreams(file, createdItems: new[] { new ArchiveItemStream { FileName = ComicInfo.NAME, Stream = comicInfo.ToXmlStream() } });
             return true;
         }
     }

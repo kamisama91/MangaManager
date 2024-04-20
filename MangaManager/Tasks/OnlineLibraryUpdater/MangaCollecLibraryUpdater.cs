@@ -11,8 +11,8 @@ namespace MangaManager.Tasks.OnlineLibraryUpdater
                 return false;
             }
 
-            var workingFileName = workItem.FilePath;
-            return Path.GetExtension(workingFileName) == ".cbz" && ArchiveHelper.HasComicInfo(workingFileName);
+            var archiveInfo = ArchiveHelper.GetOrCreateArchiveInfo(workItem.FilePath);
+            return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && archiveInfo.HasComicInfo;
         }
 
         public bool Process(WorkItem workItem)

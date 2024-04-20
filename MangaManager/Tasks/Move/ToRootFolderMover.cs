@@ -12,8 +12,8 @@ namespace MangaManager.Tasks.Move
                 return false;
             }
 
-            var workingFileName = workItem.FilePath;
-            return Path.GetExtension(workingFileName) == ".cbz";
+            var archiveInfo = ArchiveHelper.GetOrCreateArchiveInfo(workItem.FilePath);
+            return archiveInfo.IsZip;
         }
 
         public bool Process(WorkItem workItem)
@@ -21,7 +21,7 @@ namespace MangaManager.Tasks.Move
             var file = workItem.FilePath;
 
             var filename = Path.GetFileNameWithoutExtension(file);
-            var extension = Path.GetExtension(file);
+            var extension = ".cbz";
 
             //Move file
             var movedPath = Path.Combine(Program.Options.SourceFolder, $"{filename}{extension}");
