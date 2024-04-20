@@ -92,6 +92,7 @@ namespace MangaManager
                 consumer.WorkItemsReader = lastChannel.Reader;
                 consumer.WorkItemsWriter = (lastChannel = Channel.CreateUnbounded<WorkItem>()).Writer;
             }
+            consumers.Last().WorkItemsWriter = null;
 
             //Producing messages and wait for end of consumming
             var consumerTasks = consumers.Select(c => c.ConsumeData()).ToArray();
@@ -107,7 +108,7 @@ namespace MangaManager
 
             public async Task BeginProducing()
             {
-                var workItems = Program.GetAllItems(Providers);
+                var workItems = GetAllItems(Providers);
                 foreach (var workItem in workItems)
                 {
                     await WorkItemsWriter.WriteAsync(workItem);
@@ -134,12 +135,12 @@ namespace MangaManager
                     {
                         var stepDuration = ProcessItem(workItem, numberOfProcessedItems++, Processors, ProgressGui);
                         totalDuration = totalDuration.Add(stepDuration);
-                        await WorkItemsWriter.WriteAsync(workItem);
+                        if(WorkItemsWriter != null) await WorkItemsWriter.WriteAsync(workItem);
                     }
                 }
 
                 ProgressGui(numberOfProcessedItems, WorkItem.InstancesCount, $"{Math.Floor(totalDuration.TotalSeconds / 60)} min {Math.Floor(totalDuration.TotalSeconds % 60)} sec");
-                WorkItemsWriter.Complete();
+                if (WorkItemsWriter != null) WorkItemsWriter.Complete();
             }
         }
 
