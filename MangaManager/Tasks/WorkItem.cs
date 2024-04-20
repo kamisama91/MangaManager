@@ -1,24 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace MangaManager.Tasks
 {
     public class WorkItem
     {
-        public static IEnumerable<WorkItem> GetAll()
-        {
-            //Only accept convertible files
-            return WorkItemProcessors.Converters
-                    .OfType<IWorkItemProvider>()
-                    .SelectMany(convertor => convertor.GetItems())
-                    .Distinct()
-                    .OrderBy(item => item.OriginalFilePath);
-        }
+        public static int InstancesCount { get; private set; }
 
         public WorkItem(string filePath)
         {
+            InstancesCount++;
+
             OriginalFilePath = filePath;
             OriginalLastWriteTime = File.GetLastWriteTime(filePath);
         }

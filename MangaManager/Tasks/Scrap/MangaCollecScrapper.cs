@@ -4,6 +4,11 @@
     {
         public bool Accept(WorkItem workItem)
         {
+            if (!Program.Options.Scrap)
+            {
+                return false;
+            }
+
             return false;
         }
 

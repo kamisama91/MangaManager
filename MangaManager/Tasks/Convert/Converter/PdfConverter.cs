@@ -19,6 +19,11 @@ namespace MangaManager.Tasks.Convert.Converter
 
         public bool Accept(WorkItem workItem)
         {
+            if (!Program.Options.Convert)
+            {
+                return false;
+            }
+
             var workingFileName = workItem.FilePath;
             return _acceptdExtensions.Contains(Path.GetExtension(workingFileName));
         }

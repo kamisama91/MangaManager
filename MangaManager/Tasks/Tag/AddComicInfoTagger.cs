@@ -10,6 +10,11 @@ namespace MangaManager.Tasks.Tag
     {
         public bool Accept(WorkItem workItem)
         {
+            if (!Program.Options.Tag)
+            {
+                return false;
+            }
+
             var workingFileName = workItem.FilePath;
             return Path.GetExtension(workingFileName) == ".cbz" && (Program.Options.TagForce || !ArchiveHelper.HasComicInfo(workingFileName));
         }

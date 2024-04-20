@@ -6,6 +6,11 @@ namespace MangaManager.Tasks.OnlineLibraryUpdater
     {
         public bool Accept(WorkItem workItem)
         {
+            if (!Program.Options.OnlineUpdate)
+            {
+                return false;
+            }
+
             var workingFileName = workItem.FilePath;
             return Path.GetExtension(workingFileName) == ".cbz" && ArchiveHelper.HasComicInfo(workingFileName);
         }

@@ -10,6 +10,11 @@ namespace MangaManager.Tasks.Rename
     {
         public bool Accept(WorkItem workItem)
         {
+            if (!Program.Options.Rename)
+            {
+                return false;
+            }
+
             var workingFileName = workItem.FilePath;
             return Path.GetExtension(workingFileName) == ".cbz";
         }
