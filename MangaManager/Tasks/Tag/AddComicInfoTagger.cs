@@ -1,22 +1,23 @@
 ﻿using MangaManager.Models;
 using MangaManager.Tasks.Rename;
-using System;
 using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
 
 namespace MangaManager.Tasks.Tag
 {
-    public class AddComicInfoTagger : IFileProcessor
+    public class AddComicInfoTagger : IWorkItemProcessor
     {
-        public bool Accept(string file)
+        public bool Accept(WorkItem workItem)
         {
-            return Path.GetExtension(file) == ".cbz" && (Program.Options.TagForce || !ArchiveHelper.HasComicInfo(file));
+            var workingFileName = workItem.FilePath;
+            return Path.GetExtension(workingFileName) == ".cbz" && (Program.Options.TagForce || !ArchiveHelper.HasComicInfo(workingFileName));
         }
 
-        public bool ProcessFile(string file, out string newFile)
+        public bool Process(WorkItem workItem)
         {
-            newFile = file;
+            var file = workItem.FilePath;
+
             var filename = Path.GetFileNameWithoutExtension(file);
             var serie = FromFileNameRenamer.ExtractSerie(filename);
             var volume = FromFileNameRenamer.ExtractVolume(filename);

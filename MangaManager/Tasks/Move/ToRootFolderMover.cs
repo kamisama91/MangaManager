@@ -3,16 +3,18 @@ using System.IO;
 
 namespace MangaManager.Tasks.Move
 {
-    public class ToRootFolderMover : IFileProcessor
+    public class ToRootFolderMover : IWorkItemProcessor
     {
-        public bool Accept(string file)
+        public bool Accept(WorkItem workItem)
         {
-            return Path.GetExtension(file) == ".cbz";
+            var workingFileName = workItem.FilePath;
+            return Path.GetExtension(workingFileName) == ".cbz";
         }
 
-        public bool ProcessFile(string file, out string newFile)
+        public bool Process(WorkItem workItem)
         {
-            var sourcefolder = Path.GetDirectoryName(file);
+            var file = workItem.FilePath;
+
             var filename = Path.GetFileNameWithoutExtension(file);
             var extension = Path.GetExtension(file);
 
@@ -24,7 +26,7 @@ namespace MangaManager.Tasks.Move
                 FileHelper.Move(file, movedPath);
             }
 
-            newFile = movedPath;
+            workItem.WorkingFilePath = movedPath;
             return true;
         }
     }

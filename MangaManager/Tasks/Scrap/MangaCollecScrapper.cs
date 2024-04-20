@@ -1,15 +1,14 @@
 ﻿namespace MangaManager.Tasks.Scrap
 {
-    public class MangaCollecScrapper : IFileProcessor
+    public class MangaCollecScrapper : IWorkItemProcessor
     {
-        public bool Accept(string file)
+        public bool Accept(WorkItem workItem)
         {
             return false;
         }
 
-        public bool ProcessFile(string file, out string newFile)
+        public bool Process(WorkItem workItem)
         {
-            newFile = file;
             return false;
         }
     }

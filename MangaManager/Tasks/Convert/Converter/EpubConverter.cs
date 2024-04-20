@@ -7,18 +7,21 @@ using System;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
-    public class EpubConverter : IFileProvider, IFileProcessor
+    public class EpubConverter : IWorkItemProvider, IWorkItemProcessor
     {
         private List<string> _acceptdExtensions = new List<string> { ".epub" };
 
-        public string[] GetFiles()
+        public IEnumerable<WorkItem> GetItems()
         {
-            return _acceptdExtensions.SelectMany(extension => Directory.EnumerateFiles(Program.Options.SourceFolder, $"*{extension}", SearchOption.AllDirectories)).ToArray();
+            return _acceptdExtensions
+                .SelectMany(extension => Directory.EnumerateFiles(Program.Options.SourceFolder, $"*{extension}", SearchOption.AllDirectories))
+                .Select(filePath => new WorkItem(filePath));
         }
 
-        public bool Accept(string file)
+        public bool Accept(WorkItem workItem)
         {
-            return _acceptdExtensions.Contains(Path.GetExtension(file));
+            var workingFileName = workItem.FilePath;
+            return _acceptdExtensions.Contains(Path.GetExtension(workingFileName));
         }
 
         private IEnumerable<ArchiveItemStream> GetArchiveItemStreams(string file)
@@ -40,15 +43,16 @@ namespace MangaManager.Tasks.Convert.Converter
                     });
         }
 
-        public bool ProcessFile(string file, out string newFile)
+        public bool Process(WorkItem workItem)
         {
+            var file = workItem.FilePath;
             var outputPath = FileHelper.GetAvailableFilename(Path.Combine(Path.GetDirectoryName(file), $"{Path.GetFileNameWithoutExtension(file)}.cbz"));
             var isSuccess = ArchiveHelper.CreateZipFromArchiveItemStreams(file, outputPath, GetArchiveItemStreams);
             if (isSuccess)
             {
                 File.Delete(file);
+                workItem.WorkingFilePath = outputPath;
             }
-            newFile = outputPath;
             return isSuccess;
         }
     }

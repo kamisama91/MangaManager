@@ -1,15 +1,17 @@
-﻿namespace MangaManager.Tasks.OnlineLibraryUpdater
+﻿using System.IO;
+
+namespace MangaManager.Tasks.OnlineLibraryUpdater
 {
-    public class MangaCollecLibraryUpdater : IFileProcessor
+    public class MangaCollecLibraryUpdater : IWorkItemProcessor
     {
-        public bool Accept(string file)
+        public bool Accept(WorkItem workItem)
         {
-            return false;
+            var workingFileName = workItem.FilePath;
+            return Path.GetExtension(workingFileName) == ".cbz" && ArchiveHelper.HasComicInfo(workingFileName);
         }
 
-        public bool ProcessFile(string file, out string newFile)
+        public bool Process(WorkItem workItem)
         {
-            newFile = file;
             return false;
         }
     }

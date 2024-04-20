@@ -7,34 +7,39 @@ using SharpCompress.Archives;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
-    public class ArchiveConverter : IFileProvider, IFileProcessor
+    public class ArchiveConverter : IWorkItemProvider, IWorkItemProcessor
     {
         private List<string> _acceptdExtensions = new List<string> { ".c7z", ".7z", ".cbr", ".rar", ".cbz", ".zip", };
 
-        public string[] GetFiles()
+        public IEnumerable<WorkItem> GetItems()
         {
-            return _acceptdExtensions.SelectMany(extension => Directory.EnumerateFiles(Program.Options.SourceFolder, $"*{extension}", SearchOption.AllDirectories)).ToArray();
+            return _acceptdExtensions
+                .SelectMany(extension => Directory.EnumerateFiles(Program.Options.SourceFolder, $"*{extension}", SearchOption.AllDirectories))
+                .Select(filePath => new WorkItem(filePath));
         }
 
-        public bool Accept(string file)
+        public bool Accept(WorkItem workItem)
         {
-            return _acceptdExtensions.Contains(Path.GetExtension(file));
+            var workingFileName = workItem.FilePath;
+            return _acceptdExtensions.Contains(Path.GetExtension(workingFileName));
         }
 
-        public bool ProcessFile(string file, out string newFile)
+        public bool Process(WorkItem workItem)
         {
-            if (!ArchiveHelper.IsZipArchive(file))
+            var workingFile = workItem.FilePath;
+
+            if (!ArchiveHelper.IsZipArchive(workingFile))
             {
-                return ConvertToCbz(file, out newFile);
+                return ConvertToCbz(workItem);
             }
 
-            if (ArchiveHelper.HasSubdirectories(file))
+            if (ArchiveHelper.HasSubdirectories(workingFile))
             {
-                return FlattenCbz(file, out newFile);
+                return FlattenCbz(workItem);
             }
 
             //No conversion needed, juste extension update
-            return RenameToCbz(file, out newFile);
+            return RenameToCbz(workItem);
         }
 
         private IEnumerable<ArchiveItemStream> GetArchiveItemStream(string file)
@@ -71,8 +76,10 @@ namespace MangaManager.Tasks.Convert.Converter
                 }
             }
         }
-        private bool ConvertToCbz(string file, out string newFile)
+        private bool ConvertToCbz(WorkItem workItem)
         {
+            var file = workItem.FilePath;
+
             var originalExtension = Path.GetExtension(file);
             var finalPath = file.Replace($"{originalExtension}", ".cbz");
             if (!file.Equals(finalPath, StringComparison.InvariantCultureIgnoreCase)) { finalPath = FileHelper.GetAvailableFilename(finalPath); }
@@ -83,13 +90,15 @@ namespace MangaManager.Tasks.Convert.Converter
             {
                 File.Delete(file);
                 FileHelper.Move(workingPath, finalPath);
+                workItem.WorkingFilePath = finalPath;
             }
-            newFile = finalPath;
             return isSuccess;
         }
 
-        private bool FlattenCbz(string file, out string newFile)
+        private bool FlattenCbz(WorkItem workItem)
         {
+            var file = workItem.FilePath;
+
             var renamedEntries = new Dictionary<string, string>();
             var deletedEntries = new HashSet<string>();
 
@@ -127,16 +136,17 @@ namespace MangaManager.Tasks.Convert.Converter
             }
 
             ArchiveHelper.UpdateZipWithArchiveItemStreams(file, renamedItems: renamedEntries, deletedItems: deletedEntries);
-            return RenameToCbz(file, out newFile);
+            return RenameToCbz(workItem);
         }
 
-        private bool RenameToCbz(string file, out string newFile)
+        private bool RenameToCbz(WorkItem workItem)
         {
+            var file = workItem.FilePath;
             var originalExtension = Path.GetExtension(file);
             var finalPath = file.Replace($"{originalExtension}", ".cbz");
             if (!file.Equals(finalPath, StringComparison.InvariantCultureIgnoreCase)) { finalPath = FileHelper.GetAvailableFilename(finalPath); }
             FileHelper.Move(file, finalPath);
-            newFile = finalPath;
+            workItem.WorkingFilePath = finalPath;
             return true;
         }
     }

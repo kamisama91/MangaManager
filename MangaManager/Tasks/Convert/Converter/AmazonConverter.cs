@@ -12,18 +12,21 @@ using System.Xml.Linq;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
-    public class AmazonConverter : IFileProvider, IFileProcessor
+    public class AmazonConverter : IWorkItemProvider, IWorkItemProcessor
     {
         private List<string> _acceptdExtensions = new List<string> { ".mobi", ".prc", ".azw", ".azw3", ".azw4" /*, ".azw6", ".azw.res", ".kfx" */};
 
-        public string[] GetFiles()
+        public IEnumerable<WorkItem> GetItems()
         {
-            return _acceptdExtensions.SelectMany(extension => Directory.EnumerateFiles(Program.Options.SourceFolder, $"*{extension}", SearchOption.AllDirectories)).ToArray();
+            return _acceptdExtensions
+                .SelectMany(extension => Directory.EnumerateFiles(Program.Options.SourceFolder, $"*{extension}", SearchOption.AllDirectories))
+                .Select(filePath => new WorkItem(filePath));
         }
 
-        public bool Accept(string file)
+        public bool Accept(WorkItem workItem)
         {
-            return _acceptdExtensions.Contains(Path.GetExtension(file));
+            var workingFileName = workItem.FilePath;
+            return _acceptdExtensions.Contains(Path.GetExtension(workingFileName));
         }
 
         private Lazy<dynamic> _pythonWrapperUnpackAzw6 = new Lazy<dynamic>(() =>
@@ -98,8 +101,10 @@ namespace MangaManager.Tasks.Convert.Converter
             throw new FormatException();
         }
 
-        public bool ProcessFile(string file, out string newFile)
+        public bool Process(WorkItem workItem)
         {
+            var file = workItem.FilePath;
+
             var tmpFolder = FileHelper.CreateUniqueTempDirectory();
             try
             {
@@ -133,8 +138,8 @@ namespace MangaManager.Tasks.Convert.Converter
                 if (isSuccess)
                 {
                     File.Delete(file);
-                }
-                newFile = outputPath;
+                    workItem.WorkingFilePath = outputPath;
+                }                
                 return isSuccess;
             }
             finally

@@ -6,11 +6,12 @@ using System.Text.RegularExpressions;
 
 namespace MangaManager.Tasks.Rename
 {
-    public class FromFileNameRenamer : IFileProcessor
+    public class FromFileNameRenamer : IWorkItemProcessor
     {
-        public bool Accept(string file)
+        public bool Accept(WorkItem workItem)
         {
-            return Path.GetExtension(file) == ".cbz";
+            var workingFileName = workItem.FilePath;
+            return Path.GetExtension(workingFileName) == ".cbz";
         }
 
         private const string NonCapturedVolumePattern = @"(?:T|Tome|V|Vol\.?|Volume|-)\s?";
@@ -75,8 +76,10 @@ namespace MangaManager.Tasks.Rename
             return Regex.IsMatch(filename, @"(.*)\s(\d+)$", RegexOptions.IgnoreCase) ? int.Parse(DoRegexReplacement(filename, @"(.*)\s(\d+)$", "$2")) : 1;
         }
 
-        public bool ProcessFile(string file, out string newFile)
+        public bool Process(WorkItem workItem)
         {
+            var file = workItem.FilePath;
+
             var folder = Path.GetDirectoryName(file);
             var filename = Path.GetFileNameWithoutExtension(file);
             var extension = Path.GetExtension(file);
@@ -112,7 +115,8 @@ namespace MangaManager.Tasks.Rename
                 renamedPath = FileHelper.GetAvailableFilename(renamedPath);
                 FileHelper.Move(workingPath, renamedPath);
             }
-            newFile = renamedPath;
+
+            workItem.WorkingFilePath = renamedPath;
             return true;
         }
     }

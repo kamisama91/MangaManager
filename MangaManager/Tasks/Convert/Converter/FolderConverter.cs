@@ -8,22 +8,22 @@ using MangaManager.Models;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
-    public class FolderConverter : IFileProvider, IFileProcessor
+    public class FolderConverter : IWorkItemProvider, IWorkItemProcessor
     {
-        public string[] GetFiles()
+        public IEnumerable<WorkItem> GetItems()
         {
             return Directory.EnumerateDirectories(Program.Options.SourceFolder, "*", SearchOption.AllDirectories)
                 .Where(folder => (string.IsNullOrEmpty(Program.Options.ArchiveFolder) || folder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.ArchiveFolder.TrimEnd(Path.DirectorySeparatorChar))
                               && (string.IsNullOrEmpty(Program.Options.QuarantineFolder) || folder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.QuarantineFolder.TrimEnd(Path.DirectorySeparatorChar)))
                 .Where(folder => !Directory.EnumerateDirectories(folder, "*", SearchOption.TopDirectoryOnly).Any())
                 .Where(folder => Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly).All(file => ImageDetection.TryGetImageExtensionFromFile(file, out var _) || Path.GetFileName(file).Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase)))
-                .OrderBy(_ => _)
-                .ToArray();
+                .Select(filePath => new WorkItem(filePath));
         }
 
-        public bool Accept(string file)
+        public bool Accept(WorkItem workItem)
         {
-            return Directory.Exists(file);
+            var workingFileName = workItem.FilePath;
+            return Directory.Exists(workingFileName);
         }
 
         private IEnumerable<ArchiveItemStream> GetArchiveItemStreams(string folder)
@@ -53,15 +53,16 @@ namespace MangaManager.Tasks.Convert.Converter
                 });
         }
 
-        public bool ProcessFile(string folder, out string newFile)
+        public bool Process(WorkItem workItem)
         {
+            var folder = workItem.FilePath;
             var outputPath = FileHelper.GetAvailableFilename($"{folder}.cbz");
             var isSuccess = ArchiveHelper.CreateZipFromArchiveItemStreams(folder, outputPath, GetArchiveItemStreams);
             if (isSuccess)
             {
                 Directory.Delete(folder, true);
+                workItem.WorkingFilePath = outputPath;
             }
-            newFile = outputPath;
             return isSuccess;
         }
     }

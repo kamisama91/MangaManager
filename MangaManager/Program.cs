@@ -30,28 +30,33 @@ namespace MangaManager
 
             try
             {
-                var workingFiles = WorkingFile.GetAll();
+                var startTime = DateTime.Now;
+
+                var workingFiles = WorkItem.GetAll().ToList();
 
                 if (options.Convert) 
-                    RunProcessors(workingFiles, FileProcessors.Converters, View.ConversionProgress);
+                    RunProcessors(workingFiles, WorkItemProcessors.Converters, View.ConversionProgress);
                 
                 if (options.Rename) 
-                    RunProcessors(workingFiles, FileProcessors.Renamers, View.RenamingProgress);
+                    RunProcessors(workingFiles, WorkItemProcessors.Renamers, View.RenamingProgress);
                 
                 if (options.Move) 
-                    RunProcessors(workingFiles, FileProcessors.Movers, View.MovingProgress);
+                    RunProcessors(workingFiles, WorkItemProcessors.Movers, View.MovingProgress);
 
                 if (options.Scrap)
-                    RunProcessors(workingFiles, FileProcessors.Scappers, View.ScrappingProgress);
+                    RunProcessors(workingFiles, WorkItemProcessors.Scappers, View.ScrappingProgress);
 
                 if (options.Tag)
-                    RunProcessors(workingFiles, FileProcessors.Taggers, View.TaggingProgress);
+                    RunProcessors(workingFiles, WorkItemProcessors.Taggers, View.TaggingProgress);
 
                 if (options.OnlineUpdate)
-                    RunProcessors(workingFiles, FileProcessors.OnlineLibraryUpdaters, View.OnlineUpdatingProgress);
+                    RunProcessors(workingFiles, WorkItemProcessors.OnlineLibraryUpdaters, View.OnlineUpdatingProgress);
 
                 if (options.Archive)
-                    RunProcessors(workingFiles, FileProcessors.Archivers, View.ArchivingingProgress);
+                    RunProcessors(workingFiles, WorkItemProcessors.Archivers, View.ArchivingingProgress);
+
+                var duration = DateTime.Now - startTime;
+                View.Info($"Finished: {Math.Floor(duration.TotalSeconds / 60)} min {Math.Floor(duration.TotalSeconds % 60)} sec");
             }
             catch (Exception)
             {
@@ -60,25 +65,24 @@ namespace MangaManager
             return 0;
         }
 
-        private static void RunProcessors(List<WorkingFile> workingFiles, IFileProcessor[] processors, Action<int, int, string> progressGui)
+        private static void RunProcessors(List<WorkItem> workingFiles, IWorkItemProcessor[] processors, Action<int, int, string> progressGui)
         {
             var startTime = DateTime.Now;
             var currentFileIndex = 0;
             var totalFiles = workingFiles.Count;
             foreach (var workingFile in workingFiles)
             {
-                progressGui(currentFileIndex++, totalFiles, workingFile.Filename.Replace(Options.SourceFolder, string.Empty).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                var workingFilePath = workingFile.FilePath;
+                progressGui(currentFileIndex++, totalFiles, workingFilePath.Replace(Options.SourceFolder, string.Empty).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
                 try
                 {
-                    var lastWriteTime = File.GetLastWriteTime(workingFile.Filename);
-                    processors.Where(processor => processor.Accept(workingFile.Filename))
-                              .ForEach(processor => { if (processor.ProcessFile(workingFile.Filename, out var newPath)) { workingFile.CurrentFilename = newPath; } });
-                    File.SetLastWriteTime(workingFile.Filename, lastWriteTime);
+                    processors.Where(processor => processor.Accept(workingFile))
+                              .ForEach(processor => { if (processor.Process(workingFile)) { workingFile.RestoreLastWriteTime(); } });
                     GC.Collect();
                 }
                 catch (Exception ex)
                 {
-                    View.Error($"{Path.GetFileName(workingFile.Filename)}: {ex.Message}");
+                    View.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}");
                 }
             }
             var duration = DateTime.Now - startTime;

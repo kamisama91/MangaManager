@@ -6,11 +6,12 @@ using SharpCompress;
 
 namespace MangaManager.Tasks.Archive
 {
-    public class ToLibraryFolderMover : IFileProcessor
+    public class ToLibraryFolderMover : IWorkItemProcessor
     {
-        public bool Accept( string file)
+        public bool Accept(WorkItem workItem)
         {
-            return Path.GetExtension(file) == ".cbz"  && ArchiveHelper.HasComicInfo(file);
+            var workingFileName = workItem.FilePath;
+            return Path.GetExtension(workingFileName) == ".cbz"  && ArchiveHelper.HasComicInfo(workingFileName);
         }
 
         private string BuildSerieNameFromComicInfo(ComicInfo info)
@@ -35,7 +36,6 @@ namespace MangaManager.Tasks.Archive
 
         private string BuildVolumeNameFromComicInfo(ComicInfo info)
         {
-
             ///TODO
             //Check file is flagged as Tagged
             //var tagSuffix = Regex.IsMatch(filename, @"\[tag\]|\(tag\)", RegexOptions.IgnoreCase) ? " (tag)" : string.Empty;
@@ -48,8 +48,10 @@ namespace MangaManager.Tasks.Archive
             return BuildSerieNameFromComicInfo(info) + $" T{volume.ToString("N0").PadLeft(length, '0')}";
         }
 
-        public bool ProcessFile(string file, out string newFile)
+        public bool Process(WorkItem workItem)
         {
+            var file = workItem.FilePath;
+
             var comicInfo = ArchiveHelper.GetComicInfo(file);
             
             //Guess Library Folder name
@@ -106,7 +108,7 @@ namespace MangaManager.Tasks.Archive
                 .Max();
             Directory.SetLastWriteTime(archiveFolderPath, lastWriteTime);
 
-            newFile = archiveFilePath;
+            workItem.WorkingFilePath = archiveFilePath;
             return true;
         }
     }

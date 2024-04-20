@@ -5,12 +5,13 @@ using MangaManager.Tasks.OnlineLibraryUpdater;
 using MangaManager.Tasks.Rename;
 using MangaManager.Tasks.Scrap;
 using MangaManager.Tasks.Tag;
+using System.Collections.Generic;
 
 namespace MangaManager.Tasks
 {
-    public class FileProcessors
+    public class WorkItemProcessors
     {
-        public static IFileProcessor[] Converters =
+        public static IWorkItemProcessor[] Converters =
         [
             new ArchiveConverter(),
             new PdfConverter(),
@@ -19,45 +20,45 @@ namespace MangaManager.Tasks
             new FolderConverter(),
         ];
 
-        public static IFileProcessor[] Renamers =
+        public static IWorkItemProcessor[] Renamers =
         [
             new FromFileNameRenamer(),
         ];
 
-        public static IFileProcessor[] Movers =
+        public static IWorkItemProcessor[] Movers =
         [
             new ToRootFolderMover(),
         ];
 
-        public static IFileProcessor[] Scappers =
+        public static IWorkItemProcessor[] Scappers =
         [
             new MangaCollecScrapper(),
         ];
 
-        public static IFileProcessor[] Taggers =
+        public static IWorkItemProcessor[] Taggers =
         [
             new AddComicInfoTagger(),
         ];
 
-        public static IFileProcessor[] OnlineLibraryUpdaters =
+        public static IWorkItemProcessor[] OnlineLibraryUpdaters =
         [
             new MangaCollecLibraryUpdater(),
         ];
 
-        public static IFileProcessor[] Archivers =
+        public static IWorkItemProcessor[] Archivers =
         [
             new ToLibraryFolderMover()
         ];
     }
 
-    public interface IFileProvider
+    public interface IWorkItemProvider
     {
-        public string[] GetFiles();
+        public IEnumerable<WorkItem> GetItems();
     }
 
-    public interface IFileProcessor
+    public interface IWorkItemProcessor
     {
-        public bool Accept(string file);
-        public bool ProcessFile(string file, out string newFile);
+        public bool Accept(WorkItem workItem);
+        public bool Process(WorkItem workItem);
     }
 }
