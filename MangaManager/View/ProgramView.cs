@@ -65,7 +65,7 @@ namespace MangaManager.View
             if (progressBar != null)
             {
                 var percent = 100m * (total == 0 ? 1m : current / (decimal)total);
-                progressBar.Refresh((int)percent, description.Substring(0, Math.Min(description.Length, 110)));
+                progressBar.Refresh((int)percent, description);
             }
         }
 

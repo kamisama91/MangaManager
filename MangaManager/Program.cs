@@ -111,7 +111,7 @@ namespace MangaManager
                         var startTime = DateTime.Now;
 
                         var workingFilePath = workItem.FilePath.Replace(Options.SourceFolder, string.Empty).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                        ProgressGui(numberOfProcessedItems++, WorkItem.InstancesCount, $"PROCESSING - {workingFilePath}");
+                        ProgressGui(numberOfProcessedItems++, WorkItem.InstancesCount, $"{{DarkBlue}}DOING:  {{Default}}{workingFilePath}");
                         try
                         {
                             Processors.Where(processor => processor.Accept(workItem))
@@ -122,7 +122,7 @@ namespace MangaManager
                         {
                             View.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}");
                         }
-                        ProgressGui(numberOfProcessedItems, WorkItem.InstancesCount, $"DONE - {workingFilePath}");
+                        ProgressGui(numberOfProcessedItems, WorkItem.InstancesCount, $"{{Green}}DONE:   {{Default}}{workingFilePath}");
 
                         var stepDuration = DateTime.Now - startTime;
                         totalDuration = totalDuration.Add(stepDuration);
