@@ -1,9 +1,8 @@
 ﻿using Konsole;
-using System;
 
 namespace MangaManager.View
 {
-    public class ProgramView
+    public class View
     {
         private IConsole _logs;
         private IConsole _forms;
@@ -15,20 +14,32 @@ namespace MangaManager.View
         private IProgressBar _onlineUpdateProgressBar;
         private IProgressBar _archiveProgressBar;
 
-        public ProgramView() 
+        public View() 
         {
             var windows = Window.OpenBox("Manga Manager v1.0", 120, 35);
             var tasks = windows.SplitTop("Tasks");
             var bottom = windows.SplitBottom();
             _logs = bottom.SplitRight("Logs");
             _forms = bottom.SplitLeft("User Inputs");
-            _convertProgressBar = Program.Options.Convert ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Convert ".PadRight(15)) : default;
-            _renameProgressBar = Program.Options.Rename ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Rename ".PadRight(15)) : default;
-            _moveProgressBar = Program.Options.Move ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Move ".PadRight(15)) : default;
-            _scrapProgressBar = Program.Options.Scrap ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Scrap ".PadRight(15)) : default;
-            _tagProgressBar = Program.Options.Tag ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Tag ".PadRight(15)) : default;
-            _onlineUpdateProgressBar = Program.Options.OnlineUpdate ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Online upd. ".PadRight(15)) : default;
-            _archiveProgressBar = Program.Options.Archive ? new CustomHeaderProgressBar(tasks, 100).WithLine1HeaderFormat("Archive ".PadRight(15)) : default;
+            _convertProgressBar = BuildProgressBar(tasks, "Convert ", Program.Options.Convert);
+            _renameProgressBar = BuildProgressBar(tasks, "Rename ", Program.Options.Rename);
+            _moveProgressBar = BuildProgressBar(tasks, "Move ", Program.Options.Move);
+            _scrapProgressBar = BuildProgressBar(tasks, "Scrap ", Program.Options.Scrap);
+            _tagProgressBar = BuildProgressBar(tasks, "Tag ", Program.Options.Tag);
+            _onlineUpdateProgressBar = BuildProgressBar(tasks, "Online upd. ", Program.Options.OnlineUpdate);
+            _archiveProgressBar = BuildProgressBar(tasks, "Archive ", Program.Options.Archive);
+        }
+
+        private IProgressBar BuildProgressBar(IConsole console, string headerFormat, bool isNeeded)
+        {
+            if (!isNeeded)
+                return default;
+
+            var progressBar = !Features.UseProgressBarWithColor
+                ? new CustomHeaderProgressBar(console, 100)
+                : new CustomHeaderAndColoredDesciptionProgressBar(console, 100);
+            progressBar.WithLine1HeaderFormat(headerFormat.PadRight(15));
+            return progressBar;
         }
 
         public void ConversionProgress(int current, int total, string description)

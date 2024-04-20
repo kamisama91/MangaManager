@@ -3,6 +3,7 @@ using MangaManager.Tasks;
 using MangaManager.View;
 using SharpCompress;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Channels;
@@ -15,19 +16,19 @@ namespace MangaManager
         public static void Main(string[] args)
         {
             Parser.Default
-                .ParseArguments<ProgramOptions>(args)
+                .ParseArguments<Options>(args)
                 .MapResult(
                     opts => Environment.ExitCode = Run(opts).Result,
                     errs => Environment.ExitCode = -2);
         }
         
-        public static ProgramOptions Options { get; private set; }
-        public static ProgramView View { get; private set; }
+        public static Options Options { get; private set; }
+        public static View.View View { get; private set; }
 
-        private static async Task<int> Run(ProgramOptions options)
+        private static async Task<int> Run(Options options)
         {
             Options = options;
-            View = new ProgramView();
+            View = new View.View();
 
             try
             {
@@ -46,21 +47,12 @@ namespace MangaManager
                     new() { Processors = WorkItemProcessors.Archivers, ProgressGui = View.ArchivingingProgress },
                 };
 
-                //Initialize Channels between producer and consumers
-                var lastChannel = (Channel<WorkItem>)null;
-                producer.WorkItemsWriter = (lastChannel = Channel.CreateUnbounded<WorkItem>()).Writer;
-                foreach (var consumer in consumers)
-                {
-                    consumer.WorkItemsReader = lastChannel.Reader;
-                    consumer.WorkItemsWriter = (lastChannel = Channel.CreateUnbounded<WorkItem>()).Writer;
-                }
-
                 var startTime = DateTime.Now;
 
-                //Producing messages and wait for end of consumming
-                var consumerTasks = consumers.Select(c => c.ConsumeData()).ToArray();
-                await producer.BeginProducing();
-                await Task.WhenAll(consumerTasks);
+                if (Features.UseMultiThreading)
+                    await RunMultiThreads(producer, consumers);
+                else
+                    RunSingleThread(producer, consumers);
 
                 var duration = DateTime.Now - startTime;
                 View.Info($"Finished: {Math.Floor(duration.TotalSeconds / 60)} min {Math.Floor(duration.TotalSeconds % 60)} sec");
@@ -72,6 +64,38 @@ namespace MangaManager
             return 0;
         }
 
+        private static void RunSingleThread(WorkItemsProducer producer, WorkItemsConsumer[] consumers)
+        {
+            var workItems = GetAllItems(producer.Providers).ToArray();
+            foreach (var consumer in consumers)
+            {
+                var totalDuration = new TimeSpan();
+                var numberOfProcessedItems = 0;
+                foreach (var workItem in workItems)
+                {
+                    var stepDuration = ProcessItem(workItem, numberOfProcessedItems++, consumer.Processors, consumer.ProgressGui);
+                    totalDuration = totalDuration.Add(stepDuration);
+                }
+                consumer.ProgressGui(numberOfProcessedItems, WorkItem.InstancesCount, $"{Math.Floor(totalDuration.TotalSeconds / 60)} min {Math.Floor(totalDuration.TotalSeconds % 60)} sec");
+            }
+        }
+        private static async Task RunMultiThreads(WorkItemsProducer producer, WorkItemsConsumer[] consumers)
+        {
+            //Initialize Channels between producer and consumers
+            var lastChannel = (Channel<WorkItem>)null;
+            producer.WorkItemsWriter = (lastChannel = Channel.CreateUnbounded<WorkItem>()).Writer;
+            foreach (var consumer in consumers)
+            {
+                consumer.WorkItemsReader = lastChannel.Reader;
+                consumer.WorkItemsWriter = (lastChannel = Channel.CreateUnbounded<WorkItem>()).Writer;
+            }
+
+            //Producing messages and wait for end of consumming
+            var consumerTasks = consumers.Select(c => c.ConsumeData()).ToArray();
+            await producer.BeginProducing();
+            await Task.WhenAll(consumerTasks);
+        }
+        
         private class WorkItemsProducer()
         {
             public ChannelWriter<WorkItem> WorkItemsWriter { get; set; }
@@ -80,9 +104,7 @@ namespace MangaManager
 
             public async Task BeginProducing()
             {
-                var workItems = Providers.SelectMany(convertor => convertor.GetItems())
-                                         .OrderBy(item => item.OriginalFilePath);
-
+                var workItems = Program.GetAllItems(Providers);
                 foreach (var workItem in workItems)
                 {
                     await WorkItemsWriter.WriteAsync(workItem);
@@ -90,7 +112,6 @@ namespace MangaManager
                 WorkItemsWriter.Complete();
             }
         }
-
         private class WorkItemsConsumer()
         {
             public ChannelReader<WorkItem> WorkItemsReader { get; set; }
@@ -108,25 +129,8 @@ namespace MangaManager
                 {
                     if (WorkItemsReader.TryRead(out var workItem))
                     {
-                        var startTime = DateTime.Now;
-
-                        var workingFilePath = workItem.FilePath.Replace(Options.SourceFolder, string.Empty).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                        ProgressGui(numberOfProcessedItems++, WorkItem.InstancesCount, $"{{DarkBlue}}DOING:  {{Default}}{workingFilePath}");
-                        try
-                        {
-                            Processors.Where(processor => processor.Accept(workItem))
-                                      .ForEach(processor => { if (processor.Process(workItem)) { workItem.RestoreLastWriteTime(); } });
-                            GC.Collect();
-                        }
-                        catch (Exception ex)
-                        {
-                            View.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}");
-                        }
-                        ProgressGui(numberOfProcessedItems, WorkItem.InstancesCount, $"{{Green}}DONE:   {{Default}}{workingFilePath}");
-
-                        var stepDuration = DateTime.Now - startTime;
+                        var stepDuration = ProcessItem(workItem, numberOfProcessedItems++, Processors, ProgressGui);
                         totalDuration = totalDuration.Add(stepDuration);
-
                         await WorkItemsWriter.WriteAsync(workItem);
                     }
                 }
@@ -134,6 +138,43 @@ namespace MangaManager
                 ProgressGui(numberOfProcessedItems, WorkItem.InstancesCount, $"{Math.Floor(totalDuration.TotalSeconds / 60)} min {Math.Floor(totalDuration.TotalSeconds % 60)} sec");
                 WorkItemsWriter.Complete();
             }
+        }
+
+        private static IEnumerable<WorkItem> GetAllItems(IWorkItemProvider[] provider)
+        {
+            return provider.SelectMany(convertor => convertor.GetItems())
+                           .OrderBy(item => item.OriginalFilePath);
+        }
+        private static TimeSpan ProcessItem(WorkItem workItem, int workItemPosition, IWorkItemProcessor[] processors, Action<int, int, string> progressGui)
+        {
+            var startTime = DateTime.Now;
+
+            var workingFilePath = workItem.FilePath.Replace(Options.SourceFolder, string.Empty).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            if (Features.UseProgressBar)
+            {
+                var description = Features.UseProgressBarWithColor ? $"{{DarkBlue}}DOING:  {{Default}}{workingFilePath}" : $"DOING:  {workingFilePath}";
+                progressGui(workItemPosition, WorkItem.InstancesCount, description);
+            }                
+
+            try
+            {
+                processors.Where(processor => processor.Accept(workItem))
+                          .ForEach(processor => { if (processor.Process(workItem)) { workItem.RestoreLastWriteTime(); } });
+                GC.Collect();
+            }
+            catch (Exception ex)
+            {
+                View.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}");
+            }
+
+            if (Features.UseProgressBar)
+            {
+                var description = Features.UseProgressBarWithColor ? $"{{DarkBlue}}DONE:   {{Default}}{workingFilePath}" : $"DONE:   {workingFilePath}";
+                progressGui(workItemPosition + 1, WorkItem.InstancesCount, description);
+            }                
+
+            return DateTime.Now - startTime;
         }
     }
 }

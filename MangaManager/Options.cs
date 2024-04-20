@@ -2,7 +2,7 @@
 
 namespace MangaManager
 {
-    public class ProgramOptions
+    public class Options
     {
         [Option('i', "input", Required = true, HelpText = "input")]
         public string SourceFolder { get; set; }
