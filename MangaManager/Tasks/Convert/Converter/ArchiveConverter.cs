@@ -67,6 +67,12 @@ namespace MangaManager.Tasks.Convert.Converter
                             //Preserve CommicInfo.xml
                             yield return new ArchiveItemStream { Stream = entryMemoryStream, FileName = ComicInfo.NAME };
                         }
+                        else if (Path.GetFileName(archiveReader.Entry.Key).Equals("thumbs.db", StringComparison.InvariantCultureIgnoreCase)
+                              || Path.GetFileName(archiveReader.Entry.Key).Equals("desktop.ini", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            //ignore those windows files...
+                            continue;
+                        }
                         //else if (archiveReader.Entry.Attrib.HasValue && ((FileAttributes)archiveReader.Entry.Attrib.Value & FileAttributes.System) != FileAttributes.None)
                         //{
                         //    //Ignore files with System attributes (Thumbs.db...)
@@ -74,7 +80,6 @@ namespace MangaManager.Tasks.Convert.Converter
                         //}
                         else
                         {
-                            //Program.View.Error($"Unkown archive entry: {Path.GetFileName(file)}>{archiveReader.Entry}");
                             throw new FormatException();
                         }
                     }
@@ -131,9 +136,14 @@ namespace MangaManager.Tasks.Convert.Converter
                             //Preserve CommicInfo.xml
                             renamedEntries.Add(archiveReader.Entry.Key, ComicInfo.NAME);
                         }
+                        else if (Path.GetFileName(archiveReader.Entry.Key).Equals("thumbs.db", StringComparison.InvariantCultureIgnoreCase)
+                              || Path.GetFileName(archiveReader.Entry.Key).Equals("desktop.ini", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            //ignore those windows files...
+                            continue;
+                        }
                         else
                         {
-                            //Program.View.Error($"Unkown archive entry: {Path.GetFileName(file)}>{archiveReader.Entry}");
                             throw new FormatException();
                         }
                     }
