@@ -1,5 +1,6 @@
 ﻿using Konsole;
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace MangaManager.View
@@ -19,13 +20,13 @@ namespace MangaManager.View
         private IWithCurrentProgressBar _onlineUpdateProgressBar;
         private IWithCurrentProgressBar _archiveProgressBar;
 
-        public View() 
+        public View()
         {
             var windows = Window.OpenBox("Manga Manager v1.0", 120, 35);
             var tasks = windows.SplitTop("Tasks");
             var bottom = windows.SplitBottom();
-            _logs = bottom.SplitRight("Logs");
-            _forms = bottom.SplitLeft("User Inputs");
+            _logs = new ConcurrentWriter(bottom.SplitRight("Logs"));
+            _forms = new ConcurrentWriter(bottom.SplitLeft("User Inputs"));
             _convertProgressBar = BuildProgressBar(tasks, "Convert ", Program.Options.Convert);
             _renameProgressBar = BuildProgressBar(tasks, "Rename ", Program.Options.Rename);
             _moveProgressBar = BuildProgressBar(tasks, "Move ", Program.Options.Move);
@@ -75,10 +76,9 @@ namespace MangaManager.View
         {
             RefreshProgressBar(_archiveProgressBar, current, total, description);
         }
-        
+
         private void RefreshProgressBar(IWithCurrentProgressBar progressBar, int current, int max, string description)
         {
-            
             if (progressBar != null)
             {
                 var startTime = DateTime.Now;
@@ -150,18 +150,34 @@ namespace MangaManager.View
 
         public void Info(string message)
         {
-            _logs.ForegroundColor = System.ConsoleColor.DarkBlue;
-            _logs.WriteLine(message);
+            Log(message, ConsoleColor.DarkBlue);
         }
         public void Warning(string message)
         {
-            _logs.ForegroundColor = System.ConsoleColor.DarkYellow;
-            _logs.WriteLine(message);
+            Log(message, ConsoleColor.DarkYellow);
         }
         public void Error(string message)
         {
-            _logs.ForegroundColor = System.ConsoleColor.DarkRed;
-            _logs.WriteLine(message);
+            Log(message, ConsoleColor.DarkRed);
+        }
+
+        private void Log(string message, ConsoleColor color)
+        {
+            try
+            {
+                var colorBackup = _logs.ForegroundColor;
+                _logs.ForegroundColor = color;
+                _logs.WriteLine(message);
+                _logs.ForegroundColor = colorBackup;
+            }
+            catch
+            {
+                //On linux _logs.WriteLine can throw, so printing in console
+                var systemConsoleColorBackup = Console.ForegroundColor;
+                Console.ForegroundColor = color;
+                Console.WriteLine(message);
+                Console.ForegroundColor = systemConsoleColorBackup;
+            }
         }
     }
 }
