@@ -156,8 +156,11 @@ namespace MangaManager
             progressGui(workItemPosition, WorkItem.InstancesCount, $"{{DarkBlue}}DOING:  {{Default}}{workingFilePath}");
             try
             {
-                processors.Where(processor => processor.Accept(workItem))
-                          .ForEach(processor => { if (processor.Process(workItem)) { workItem.RestoreLastWriteTime(); } });
+                var hasAtLeastOneSuccess = processors.Where(processor => processor.Accept(workItem))
+                                                     .Select(processor => processor.Process(workItem))
+                                                     .ToArray() //Force to run all accepted processors
+                                                     .Any(result => result);
+                if (hasAtLeastOneSuccess) { workItem.RestoreLastWriteTime(); }
                 GC.Collect();
             }
             catch (Exception ex)

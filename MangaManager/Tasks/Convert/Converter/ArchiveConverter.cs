@@ -147,8 +147,9 @@ namespace MangaManager.Tasks.Convert.Converter
                 }
             }
 
-            ArchiveHelper.UpdateZipWithArchiveItemStreams(file, renamedItems: renamedEntries, deletedItems: deletedEntries);
-            return RenameToCbz(workItem);
+            var isFlattened = ArchiveHelper.UpdateZipWithArchiveItemStreams(file, renamedItems: renamedEntries, deletedItems: deletedEntries);
+            var isRenamed = RenameToCbz(workItem);
+            return isFlattened || isRenamed;
         }
 
         private bool RenameToCbz(WorkItem workItem)
@@ -156,10 +157,15 @@ namespace MangaManager.Tasks.Convert.Converter
             var file = workItem.FilePath;
             var originalExtension = Path.GetExtension(file);
             var finalPath = file.Replace($"{originalExtension}", ".cbz");
-            if (!file.Equals(finalPath, StringComparison.InvariantCultureIgnoreCase)) { finalPath = FileHelper.GetAvailableFilename(finalPath); }
-            FileHelper.Move(file, finalPath);
-            workItem.WorkingFilePath = finalPath;
-            return true;
+            var needRename = !file.Equals(finalPath, StringComparison.InvariantCultureIgnoreCase);
+            if (needRename) 
+            { 
+                finalPath = FileHelper.GetAvailableFilename(finalPath);
+                FileHelper.Move(file, finalPath);
+                workItem.WorkingFilePath = finalPath;
+
+            }
+            return needRename;
         }
     }
 }

@@ -92,8 +92,7 @@ namespace MangaManager.Tasks.Tag
                 comicInfo.Day = volumeInfo.ReleaseDate.Day.ToString();
             }
 
-            ArchiveHelper.UpdateZipWithArchiveItemStreams(file, createdItems: new[] { new ArchiveItemStream { FileName = ComicInfo.NAME, Stream = comicInfo.ToXmlStream() } });
-            return true;
+            return ArchiveHelper.UpdateZipWithArchiveItemStreams(file, createdItems: new[] { new ArchiveItemStream { FileName = ComicInfo.NAME, Stream = comicInfo.ToXmlStream() } });
         }
     }
 }

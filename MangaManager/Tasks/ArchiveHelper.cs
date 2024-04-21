@@ -98,7 +98,7 @@ namespace MangaManager.Tasks
         {
             if (createdItems == null && renamedItems == null && deletedItems == null)
             {
-                return true;
+                return false;
             }
 
             ComicInfo comicInfo = null;
