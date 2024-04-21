@@ -16,6 +16,7 @@ namespace MangaManager.Tasks.Convert.Converter
                               && (string.IsNullOrEmpty(Program.Options.QuarantineFolder) || folder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.QuarantineFolder.TrimEnd(Path.DirectorySeparatorChar)))
                 .Where(folder => !Directory.EnumerateDirectories(folder, "*", SearchOption.TopDirectoryOnly).Any())
                 .Where(folder => Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly).All(file => ImageDetection.TryGetImageExtensionFromFile(file, out var _) || Path.GetFileName(file).Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase)))
+                .OrderBy(filePath => filePath)
                 .Select(filePath => new WorkItem(filePath));
         }
 

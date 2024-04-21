@@ -21,7 +21,7 @@ namespace MangaManager
                     opts => Environment.ExitCode = Run(opts).Result,
                     errs => Environment.ExitCode = -2);
         }
-        
+
         public static Options Options { get; private set; }
         public static View.View View { get; private set; }
 
@@ -56,7 +56,8 @@ namespace MangaManager
 
                 var duration = DateTime.Now - startTime;
                 View.Info($"Finished:");
-                View.Info($"   Time:  {Math.Floor(duration.TotalSeconds / 60)} min {Math.Floor(duration.TotalSeconds % 60)} sec");
+                View.Info($"   Total Time:  {Math.Floor(duration.TotalSeconds / 60)} min {Math.Floor(duration.TotalSeconds % 60)} sec");
+                View.Info($"   View  Time:  {Math.Floor(View.RefreshProgressBarTotalSeconds / 60)} min {Math.Floor(View.RefreshProgressBarTotalSeconds % 60)} sec");
                 View.Info($"   Items: {WorkItem.InstancesCount}");
                 View.Info($"   Cache: {CacheArchiveInfos.Hits} Hits / {CacheArchiveInfos.Misses} Misses");
             }
@@ -88,36 +89,34 @@ namespace MangaManager
             await producer.ProduceDataAsync();
             await Task.WhenAll(consumers.Select(c => c.ConsumeDataAsync()).ToArray());
         }
-        
+
         private class WorkItemsProducer()
         {
             public IWorkItemProvider[] Providers { get; set; }
 
             public IEnumerable<WorkItem> ProduceData()
             {
-                return GetAllWorkItems().ToArray();
+                return GetAllWorkItems();
             }
 
             public ChannelWriter<WorkItem> WorkItemsWriter { get; set; }
             public async Task ProduceDataAsync()
             {
-                var workItems = GetAllWorkItems();
-                foreach (var workItem in workItems)
+                foreach (var workItem in GetAllWorkItems())
                 {
                     await WorkItemsWriter.WriteAsync(workItem);
                 }
                 WorkItemsWriter.Complete();
             }
 
-            private IEnumerable<WorkItem> GetAllWorkItems()
+            private WorkItem[] GetAllWorkItems()
             {
                 return Providers.SelectMany(provider => provider.GetItems())
-                                .OrderBy(item => item.OriginalFilePath);
+                                .ToArray();
             }
         }
         private class WorkItemsConsumer()
         {
-            private int NumberOfProcessedItems;
             private long TotalMilliseconds;
             private decimal TotalSeconds => (decimal)(TotalMilliseconds / 1000);
 
@@ -126,8 +125,8 @@ namespace MangaManager
 
             public void ConsumeData(IEnumerable<WorkItem> workItems)
             {
-                workItems.ForEach(workItem => ProcessWorkItem(workItem, NumberOfProcessedItems));
-                ProgressGui(NumberOfProcessedItems, WorkItem.InstancesCount, $"{Math.Floor(TotalSeconds / 60)} min {Math.Floor(TotalSeconds % 60)} sec");
+                workItems.ForEach(workItem => ProcessWorkItem(workItem));
+                ProgressGui(WorkItem.InstancesCount, WorkItem.InstancesCount, $"{Math.Floor(TotalSeconds / 60)} min {Math.Floor(TotalSeconds % 60)} sec");
             }
 
             public ChannelReader<WorkItem> WorkItemsReader { get; set; }
@@ -136,7 +135,7 @@ namespace MangaManager
             public async Task ConsumeDataAsync()
             {
                 var parallelTasks = new List<Task>();
-                for (int i = 0; i < DegreeOfParallelism; i++) 
+                for (int i = 0; i < DegreeOfParallelism; i++)
                 {
                     parallelTasks.Add(
                         Task.Run(async () =>
@@ -145,42 +144,45 @@ namespace MangaManager
                             {
                                 if (WorkItemsReader.TryRead(out var workItem))
                                 {
-                                    ProcessWorkItem(workItem, NumberOfProcessedItems);
+                                    ProcessWorkItem(workItem);
                                     if (WorkItemsWriter != null) await WorkItemsWriter.WriteAsync(workItem);
                                 }
                             }
                         })
                     );
                 }
-                await Task.WhenAll(parallelTasks);
 
-                ProgressGui(NumberOfProcessedItems, WorkItem.InstancesCount, $"{Math.Floor(TotalSeconds / 60)} min {Math.Floor(TotalSeconds % 60)} sec");
+                await Task.WhenAll(parallelTasks);
                 if (WorkItemsWriter != null) WorkItemsWriter.Complete();
+
+                ProgressGui(WorkItem.InstancesCount, WorkItem.InstancesCount, $"{Math.Floor(TotalSeconds / 60)} min {Math.Floor(TotalSeconds % 60)} sec");
             }
 
-            private void ProcessWorkItem(WorkItem workItem, int workItemPosition)
+            private void ProcessWorkItem(WorkItem workItem)
             {
-                var startTime = DateTime.Now;
                 var workingFilePath = workItem.FilePath.Replace(Options.SourceFolder, string.Empty).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                ProgressGui(workItemPosition, WorkItem.InstancesCount, $"{{DarkBlue}}DOING:  {{Default}}{workingFilePath}");
                 try
                 {
+                    ProgressGui(workItem.InstanceId, WorkItem.InstancesCount, $"{{DarkBlue}}DOING:  {{Default}}{workingFilePath}");
+
+                    var startTime = DateTime.Now;
                     var hasAtLeastOneSuccess = Processors.Where(processor => processor.Accept(workItem))
                                                          .Select(processor => processor.Process(workItem))
                                                          .ToArray() //Force to run all accepted processors
                                                          .Any(result => result);
                     if (hasAtLeastOneSuccess) { workItem.RestoreLastWriteTime(); }
                     GC.Collect();
+
+                    var stepTotalMilliseconds = (long)((DateTime.Now - startTime).TotalMilliseconds);
+                    Interlocked.Add(ref TotalMilliseconds, stepTotalMilliseconds);
+
+                    ProgressGui(workItem.InstanceId, WorkItem.InstancesCount, $"{{Green}}DONE:   {{Default}}{workingFilePath}");
                 }
                 catch (Exception ex)
                 {
+                    ProgressGui(workItem.InstanceId, WorkItem.InstancesCount, $"{{DarkRed}}FAIL:   {{Default}}{workingFilePath}");
                     View.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}");
                 }
-                ProgressGui(workItemPosition, WorkItem.InstancesCount, $"{{Green}}DONE:   {{Default}}{workingFilePath}");
-
-                var stepTotalMilliseconds = (long)((DateTime.Now - startTime).TotalMilliseconds);
-                Interlocked.Increment(ref NumberOfProcessedItems);
-                Interlocked.Add(ref TotalMilliseconds, stepTotalMilliseconds);
             }
         }
     }

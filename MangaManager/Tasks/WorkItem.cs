@@ -1,20 +1,22 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 
 namespace MangaManager.Tasks
 {
     public class WorkItem
     {
-        public static int InstancesCount { get; private set; }
+        public static int _instancesCount;
+        public static int InstancesCount => _instancesCount;
 
         public WorkItem(string filePath)
         {
-            InstancesCount++;
-
+            InstanceId = Interlocked.Increment(ref _instancesCount);
             OriginalFilePath = filePath;
             OriginalLastWriteTime = File.GetLastWriteTime(filePath);
         }
 
+        public int InstanceId { get; private set; }
         public string OriginalFilePath { get; private set; }
         public string WorkingFilePath { get; set; }
         public DateTime OriginalLastWriteTime { get; private set; }

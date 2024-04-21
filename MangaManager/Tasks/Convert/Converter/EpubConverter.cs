@@ -15,6 +15,7 @@ namespace MangaManager.Tasks.Convert.Converter
         {
             return _acceptdExtensions
                 .SelectMany(extension => Directory.EnumerateFiles(Program.Options.SourceFolder, $"*{extension}", SearchOption.AllDirectories))
+                .OrderBy(filePath => filePath)
                 .Select(filePath => new WorkItem(filePath));
         }
 

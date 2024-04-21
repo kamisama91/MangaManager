@@ -1,10 +1,14 @@
 ﻿using Konsole;
 using System;
+using System.Threading;
 
 namespace MangaManager.View
 {
     public class View
     {
+        private long RefreshProgressBarTotalMilliseconds;
+        public decimal RefreshProgressBarTotalSeconds => (decimal)(RefreshProgressBarTotalMilliseconds / 1000);
+
         private IConsole _logs;
         private IConsole _forms;
         private IWithCurrentProgressBar _convertProgressBar;
@@ -74,14 +78,23 @@ namespace MangaManager.View
         
         private void RefreshProgressBar(IWithCurrentProgressBar progressBar, int current, int max, string description)
         {
+            
             if (progressBar != null)
             {
+                var startTime = DateTime.Now;
+                var UpdateProgressBarTimers = () =>
+                {
+                    var stepTotalMilliseconds = (long)((DateTime.Now - startTime).TotalMilliseconds);
+                    Interlocked.Add(ref RefreshProgressBarTotalMilliseconds, stepTotalMilliseconds);
+                };
+
                 lock (progressBar)
                 {
                     var DoRefresh = () =>
                     {
                         if (!Features.UseProgressBarWithColor) { description = System.Text.RegularExpressions.Regex.Replace(description, @"\{[^\}]*\}", ""); }
                         progressBar.Refresh(current, description);
+                        UpdateProgressBarTimers();
                     };
 
                     max = Math.Max(1, max); //avoid 0 division
@@ -129,6 +142,9 @@ namespace MangaManager.View
                         return;
                     }
                 }
+
+                //Here Nohing has been done in refreshed on screen but a lock has been waited
+                UpdateProgressBarTimers();
             }
         }
 
