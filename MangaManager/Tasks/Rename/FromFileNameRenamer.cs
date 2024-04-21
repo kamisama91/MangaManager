@@ -26,10 +26,11 @@ namespace MangaManager.Tasks.Rename
             var extension = ".cbz";
 
             //Check file is flagged as Tagged
-            var tagSuffix = FileNameParser.Parse(Path.GetFileNameWithoutExtension(filename)).IsTagged ? " (tag)" : string.Empty;
+            var parsedFileName = FileNameParser.Parse(Path.GetFileNameWithoutExtension(filename));
+            var tagSuffix = parsedFileName.IsTagged ? " (tag)" : string.Empty;
 
             //Enrich filename whith prent folders names
-            var enrichedFilename = filename;
+            var enrichedFilename = $"{CultureInfo.InvariantCulture.TextInfo.ToTitleCase(parsedFileName.Serie)} T{parsedFileName.Volume:D2}";
             var parentFolder = folder;
             while (parentFolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.SourceFolder.TrimEnd(Path.DirectorySeparatorChar)
                 && (string.IsNullOrEmpty(Program.Options.ArchiveFolder) || parentFolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.ArchiveFolder.TrimEnd(Path.DirectorySeparatorChar))
@@ -44,12 +45,10 @@ namespace MangaManager.Tasks.Rename
             }
 
             //Extract Serie and Volume from name
-            var parsedFileName = FileNameParser.Parse(enrichedFilename);
-            var serie = parsedFileName.Serie;
-            var volume = parsedFileName.Volume;
+            parsedFileName = FileNameParser.Parse(enrichedFilename);
 
             //Rename file
-            var renamedPath = Path.Combine(folder, $"{CultureInfo.InvariantCulture.TextInfo.ToTitleCase(serie)} T{volume:D2}{tagSuffix}{extension}");
+            var renamedPath = Path.Combine(folder, $"{CultureInfo.InvariantCulture.TextInfo.ToTitleCase(parsedFileName.Serie)} T{parsedFileName.Volume:D2}{tagSuffix}{extension}");
             if (!file.Equals(renamedPath, StringComparison.InvariantCultureIgnoreCase))
             {
                 var workingPath = file.Replace($".cbz", ".cbz.tmp");
