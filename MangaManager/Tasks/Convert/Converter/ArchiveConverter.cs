@@ -112,41 +112,38 @@ namespace MangaManager.Tasks.Convert.Converter
             var renamedEntries = new Dictionary<string, string>();
             var deletedEntries = new HashSet<string>();
 
-            using (var archiveReader = ArchiveFactory.Open(file).ExtractAllEntries())
+            using (var archive = Ionic.Zip.ZipFile.Read(file))
             {
                 int i = 0;
-                while (archiveReader.MoveToNextEntry())
+                foreach (var entry in archive.Where(e => !e.IsDirectory).ToArray())
                 {
-                    if (archiveReader.Entry.IsDirectory)
+                    using var entryStream = entry.OpenReader();
+                    using var entryMemoryStream = new MemoryStream();
+                    entryStream.CopyTo(entryMemoryStream);
+                    if (entryMemoryStream.TryGetImageExtension(out var extension))
                     {
-                        deletedEntries.Add(archiveReader.Entry.Key);
+                        renamedEntries.Add(entry.FileName, $"{i:00000}.{extension}");
+                        i++;
+                    }
+                    else if (Path.GetFileName(entry.FileName).Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        //Preserve CommicInfo.xml
+                        renamedEntries.Add(entry.FileName, ComicInfo.NAME);
+                    }
+                    else if (Path.GetFileName(entry.FileName).Equals("thumbs.db", StringComparison.InvariantCultureIgnoreCase)
+                            || Path.GetFileName(entry.FileName).Equals("desktop.ini", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        //ignore those windows files...
+                        deletedEntries.Add(entry.FileName);
                     }
                     else
                     {
-                        using var entryStream = archiveReader.OpenEntryStream();
-                        using var entryMemoryStream = new MemoryStream();
-                        entryStream.CopyTo(entryMemoryStream);
-                        if (entryMemoryStream.TryGetImageExtension(out var extension))
-                        {
-                            renamedEntries.Add(archiveReader.Entry.Key, $"{i:00000}.{extension}");
-                            i++;
-                        }
-                        else if (Path.GetFileName(archiveReader.Entry.Key).Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            //Preserve CommicInfo.xml
-                            renamedEntries.Add(archiveReader.Entry.Key, ComicInfo.NAME);
-                        }
-                        else if (Path.GetFileName(archiveReader.Entry.Key).Equals("thumbs.db", StringComparison.InvariantCultureIgnoreCase)
-                              || Path.GetFileName(archiveReader.Entry.Key).Equals("desktop.ini", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            //ignore those windows files...
-                            continue;
-                        }
-                        else
-                        {
-                            throw new FormatException();
-                        }
+                        throw new FormatException();
                     }
+                }
+                foreach (var entry in archive.Where(e => e.IsDirectory).ToArray())
+                {
+                    deletedEntries.Add(entry.FileName);
                 }
             }
 
