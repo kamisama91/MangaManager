@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using MangaManager.Models;
 
@@ -6,7 +7,7 @@ namespace MangaManager.Tasks
 {
     public static class CacheArchiveInfos
     {
-        private static Dictionary<string, ArchiveInfo> s_ArchiveInfoCache = new Dictionary<string, ArchiveInfo>();
+        private static ConcurrentDictionary<string, ArchiveInfo> s_ArchiveInfoCache = new ConcurrentDictionary<string, ArchiveInfo>();
 
         public static int Hits { get; private set; }
         public static int Misses { get; private set; }
@@ -37,7 +38,7 @@ namespace MangaManager.Tasks
         {
             if (Exists(path))
             {
-                s_ArchiveInfoCache.Remove(path);
+                s_ArchiveInfoCache.Remove(path, out _);
             }
         }
 
