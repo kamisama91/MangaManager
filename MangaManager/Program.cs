@@ -152,15 +152,8 @@ namespace MangaManager
         private static TimeSpan ProcessItem(WorkItem workItem, int workItemPosition, IWorkItemProcessor[] processors, Action<int, int, string> progressGui)
         {
             var startTime = DateTime.Now;
-
             var workingFilePath = workItem.FilePath.Replace(Options.SourceFolder, string.Empty).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-            if (Features.UseProgressBar)
-            {
-                var description = Features.UseProgressBarWithColor ? $"{{DarkBlue}}DOING:  {{Default}}{workingFilePath}" : $"DOING:  {workingFilePath}";
-                progressGui(workItemPosition, WorkItem.InstancesCount, description);
-            }                
-
+            progressGui(workItemPosition, WorkItem.InstancesCount, $"{{DarkBlue}}DOING:  {{Default}}{workingFilePath}");
             try
             {
                 processors.Where(processor => processor.Accept(workItem))
@@ -171,13 +164,7 @@ namespace MangaManager
             {
                 View.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}");
             }
-
-            if (Features.UseProgressBar)
-            {
-                var description = Features.UseProgressBarWithColor ? $"{{DarkBlue}}DONE:   {{Default}}{workingFilePath}" : $"DONE:   {workingFilePath}";
-                progressGui(workItemPosition + 1, WorkItem.InstancesCount, description);
-            }                
-
+            progressGui(workItemPosition, WorkItem.InstancesCount, $"{{Green}}DONE:   {{Default}}{workingFilePath}");
             return DateTime.Now - startTime;
         }
     }

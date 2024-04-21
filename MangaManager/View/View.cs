@@ -75,6 +75,12 @@ namespace MangaManager.View
         {
             if (progressBar != null)
             {
+                if (!(Features.UseProgressBar || (current == 0) || (current == total) || ((current % Features.ProgressBarStep) == 0)))
+                    return;
+
+                if (!Features.UseProgressBarWithColor)
+                    description = System.Text.RegularExpressions.Regex.Replace(description, @"\{[^\}]*\}", "");
+
                 var percent = 100m * (total == 0 ? 1m : current / (decimal)total);
                 progressBar.Refresh((int)percent, description);
             }
