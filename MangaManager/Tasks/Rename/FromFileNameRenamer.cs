@@ -26,7 +26,7 @@ namespace MangaManager.Tasks.Rename
             var extension = ".cbz";
 
             //Check file is flagged as Tagged
-            var parsedFileName = FileNameParser.Parse(Path.GetFileNameWithoutExtension(filename));
+            var parsedFileName = FileNameParser.Parse(filename);
             var tagSuffix = parsedFileName.IsTagged ? " (tag)" : string.Empty;
 
             //Enrich filename whith prent folders names
@@ -36,7 +36,7 @@ namespace MangaManager.Tasks.Rename
                 && (string.IsNullOrEmpty(Program.Options.ArchiveFolder) || parentFolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.ArchiveFolder.TrimEnd(Path.DirectorySeparatorChar))
                 && (string.IsNullOrEmpty(Program.Options.QuarantineFolder) || parentFolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.QuarantineFolder.TrimEnd(Path.DirectorySeparatorChar)))
             {
-                var parentFolderSerie = FileNameParser.Parse(Path.GetFileNameWithoutExtension(parentFolder)).Serie;
+                var parentFolderSerie = FileNameParser.Parse(Path.GetFileName(parentFolder)).Serie;
                 if (!enrichedFilename.Contains(parentFolderSerie, StringComparison.InvariantCultureIgnoreCase))
                 {
                     enrichedFilename = $"{parentFolderSerie} {enrichedFilename}";
