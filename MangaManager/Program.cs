@@ -49,7 +49,7 @@ namespace MangaManager
 
                 var startTime = DateTime.Now;
 
-                if (Features.UseMultiThreading)
+                if (Features.RunMultiThreads)
                     await RunMultiThreads(producer, consumers);
                 else
                     RunSingleThread(producer, consumers);

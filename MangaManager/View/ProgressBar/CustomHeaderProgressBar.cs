@@ -3,7 +3,7 @@ using System;
 
 namespace MangaManager.View
 {
-    public class CustomHeaderProgressBar : IProgressBar
+    public class CustomHeaderProgressBar : IWithCurrentProgressBar
     {
         private static object _locker = new object();
 
@@ -17,8 +17,8 @@ namespace MangaManager.View
         private string FORMAT_LINE1_PERCENT = "({0,-3}%) ";
         protected string FORMAT_LINE2 = "    {0}";
 
-        private int _current = 0;
-        private string _item = string.Empty;
+        public int Current { get; private set; } = 0;
+        public string Item { get; private set; } = string.Empty;
 
         public int Y => _y;
         public string Line1 { get; private set; }
@@ -32,7 +32,7 @@ namespace MangaManager.View
             set
             {
                 _max = value;
-                Refresh(_current, _item);
+                Refresh(Current, Item);
             }
         }
 
@@ -54,19 +54,19 @@ namespace MangaManager.View
         public CustomHeaderProgressBar WithLine1HeaderFormat(string format)
         {
             FORMAT_LINE1_HEADER = format;
-            Refresh(_current, _item);
+            Refresh(Current, Item);
             return this;
         }
         public CustomHeaderProgressBar WithLine1PercentFormat(string format)
         {
             FORMAT_LINE1_PERCENT = format;
-            Refresh(_current, _item);
+            Refresh(Current, Item);
             return this;
         }
         public CustomHeaderProgressBar WithLine2Format(string format)
         {
             FORMAT_LINE2 = format;
-            Refresh(_current, _item);
+            Refresh(Current, Item);
             return this;
         }
 
@@ -79,8 +79,8 @@ namespace MangaManager.View
         {
             lock (_locker)
             {
-                _current = current;
-                _item = item;
+                Current = current;
+                Item = item;
 
                 var state = _console.State;
                 try
@@ -110,7 +110,6 @@ namespace MangaManager.View
             _console.Write(line1Progress);
             return headerText + percentText + line1Progress;
         }
-
         protected virtual string RefreshLine2(string item)
         {
             var line2Text = string.Format(FORMAT_LINE2, item ?? string.Empty).PadRight(_console.WindowWidth).Substring(0, _console.WindowWidth);
@@ -121,8 +120,17 @@ namespace MangaManager.View
 
         public void Next(string item)
         {
-            _current++;
-            Refresh(_current, item);
+            Current++;
+            Refresh(Current, item);
+        }
+
+        public void ForceCurrentWithNoRefresh(int current)
+        {
+            Current = current;
+        }
+        public void ForceMaxWithNoRefresh(int max)
+        {
+            _max = max;
         }
     }
 }

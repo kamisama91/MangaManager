@@ -9,7 +9,7 @@
                 return false;
             }
 
-            return false;
+            return true;
         }
 
         public bool Process(WorkItem workItem)

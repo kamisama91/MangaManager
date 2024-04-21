@@ -1,4 +1,5 @@
 ﻿using Konsole;
+using System;
 
 namespace MangaManager.View
 {
@@ -6,13 +7,13 @@ namespace MangaManager.View
     {
         private IConsole _logs;
         private IConsole _forms;
-        private IProgressBar _convertProgressBar;
-        private IProgressBar _renameProgressBar;
-        private IProgressBar _moveProgressBar;
-        private IProgressBar _scrapProgressBar;
-        private IProgressBar _tagProgressBar;
-        private IProgressBar _onlineUpdateProgressBar;
-        private IProgressBar _archiveProgressBar;
+        private IWithCurrentProgressBar _convertProgressBar;
+        private IWithCurrentProgressBar _renameProgressBar;
+        private IWithCurrentProgressBar _moveProgressBar;
+        private IWithCurrentProgressBar _scrapProgressBar;
+        private IWithCurrentProgressBar _tagProgressBar;
+        private IWithCurrentProgressBar _onlineUpdateProgressBar;
+        private IWithCurrentProgressBar _archiveProgressBar;
 
         public View() 
         {
@@ -30,14 +31,14 @@ namespace MangaManager.View
             _archiveProgressBar = BuildProgressBar(tasks, "Archive ", Program.Options.Archive);
         }
 
-        private IProgressBar BuildProgressBar(IConsole console, string headerFormat, bool isNeeded)
+        private IWithCurrentProgressBar BuildProgressBar(IConsole console, string headerFormat, bool isNeeded)
         {
             if (!isNeeded)
                 return default;
 
             var progressBar = !Features.UseProgressBarWithColor
-                ? new CustomHeaderProgressBar(console, 100)
-                : new CustomHeaderAndColoredDesciptionProgressBar(console, 100);
+                ? new CustomHeaderProgressBar(console, 1)
+                : new CustomHeaderAndColoredDesciptionProgressBar(console, 1);
             progressBar.WithLine1HeaderFormat(headerFormat.PadRight(15));
             return progressBar;
         }
@@ -71,18 +72,63 @@ namespace MangaManager.View
             RefreshProgressBar(_archiveProgressBar, current, total, description);
         }
         
-        private void RefreshProgressBar(IProgressBar progressBar, int current, int total, string description)
+        private void RefreshProgressBar(IWithCurrentProgressBar progressBar, int current, int max, string description)
         {
             if (progressBar != null)
             {
-                if (!(Features.UseProgressBar || (current == 0) || (current == total) || ((current % Features.ProgressBarStep) == 0)))
-                    return;
+                lock (progressBar)
+                {
+                    var DoRefresh = () =>
+                    {
+                        if (!Features.UseProgressBarWithColor) { description = System.Text.RegularExpressions.Regex.Replace(description, @"\{[^\}]*\}", ""); }
+                        progressBar.Refresh(current, description);
+                    };
 
-                if (!Features.UseProgressBarWithColor)
-                    description = System.Text.RegularExpressions.Regex.Replace(description, @"\{[^\}]*\}", "");
+                    max = Math.Max(1, max); //avoid 0 division
+                    current = Math.Max(0, Math.Min(current, max));
 
-                var percent = 100m * (total == 0 ? 1m : current / (decimal)total);
-                progressBar.Refresh((int)percent, description);
+                    if (progressBar.Max != max)
+                    {
+                        //Always refresh when Max vakus change
+                        progressBar.ForceMaxWithNoRefresh(max);
+                        DoRefresh();
+                        return;
+                    }
+
+                    if (current < progressBar.Current)
+                    {
+                        //When Max is same, do not update
+                        return;
+                    }
+
+                    if (Features.ProgressBarPercentStep == 0)
+                    {
+                        //Refresh when step Features is Off
+                        DoRefresh();
+                        return;
+                    }
+
+                    if ((current == 0) || (current == progressBar.Max))
+                    {
+                        //When step Features is on: still referesh when first/last item
+                        DoRefresh();
+                        return;
+                    }
+
+                    var refreshPercent = Convert.ToInt32((decimal)Features.ProgressBarPercentStep * Math.Floor(Math.Floor(100m * (decimal)current / (decimal)progressBar.Max) / (decimal)Features.ProgressBarPercentStep));
+                    var currentPercent = Convert.ToInt32((decimal)Features.ProgressBarPercentStep * Math.Floor(Math.Floor(100m * (decimal)progressBar.Current / (decimal)progressBar.Max) / (decimal)Features.ProgressBarPercentStep));
+                    if ((current == progressBar.Current) || (currentPercent < refreshPercent))
+                    {
+                        //When step Features is on: when steps are raised, progress to latest
+                        var currentBackup = current;
+                        progressBar.ForceMaxWithNoRefresh(100);
+                        current = refreshPercent;
+                        DoRefresh();
+                        progressBar.ForceMaxWithNoRefresh(max);
+                        progressBar.ForceCurrentWithNoRefresh(currentBackup);
+                        return;
+                    }
+                }
             }
         }
 
