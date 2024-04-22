@@ -82,10 +82,7 @@ namespace MangaManager.Tasks
                          {
                              var sourceFile = file.Replace(newPath, path);
                              CacheArchiveInfos.UpdatePath(sourceFile, file);
-                             if (WorkItem.Find(sourceFile) is WorkItem workItem)
-                             {
-                                 workItem.UpdateFilePath(file);
-                             }
+                             CacheWorkItems.Get(sourceFile)?.UpdatePath(file);
                          });
             }
             else if (File.Exists(path))
@@ -97,10 +94,7 @@ namespace MangaManager.Tasks
 
                 File.Move(path, newPath);
                 CacheArchiveInfos.UpdatePath(path, newPath);
-                if (WorkItem.Find(path) is WorkItem workItem)
-                {
-                    workItem.UpdateFilePath(newPath);
-                }
+                CacheWorkItems.Get(path)?.UpdatePath(newPath);
 
                 var sourcefolder = Path.GetDirectoryName(path);
                 while (sourcefolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.SourceFolder.TrimEnd(Path.DirectorySeparatorChar)

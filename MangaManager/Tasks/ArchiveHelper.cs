@@ -134,10 +134,7 @@ namespace MangaManager.Tasks
             archiveInfo.HasSubdirectories = false;
             archiveInfo.ComicInfo = comicInfo;
 
-            if (WorkItem.Find(sourceFile) is WorkItem workItem) 
-            {
-                workItem.RestoreLastWriteTime();
-            }
+            CacheWorkItems.Get(sourceFile)?.RestoreLastWriteTime();
         }
     }
 }

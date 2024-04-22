@@ -21,7 +21,7 @@ namespace MangaManager.Tasks.Convert.Converter
             return _acceptdExtensions
                 .SelectMany(extension => Directory.EnumerateFiles(Program.Options.SourceFolder, $"*{extension}", SearchOption.AllDirectories))
                 .OrderBy(filePath => filePath)
-                .Select(filePath => new WorkItem(filePath));
+                .Select(filePath => CacheWorkItems.Create(filePath));
         }
 
         public bool Accept(WorkItem workItem)
@@ -144,7 +144,7 @@ namespace MangaManager.Tasks.Convert.Converter
                 if (isSuccess)
                 {
                     File.Delete(file);
-                    workItem.UpdateFilePath(outputPath);
+                    workItem.UpdatePath(outputPath);
                 }
             }
             finally

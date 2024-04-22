@@ -16,7 +16,7 @@ namespace MangaManager.Tasks.Convert.Converter
             return _acceptdExtensions
                 .SelectMany(extension => Directory.EnumerateFiles(Program.Options.SourceFolder, $"*{extension}", SearchOption.AllDirectories))
                 .OrderBy(filePath => filePath)
-                .Select(filePath => new WorkItem(filePath));
+                .Select(filePath => CacheWorkItems.Create(filePath));
         }
 
         public bool Accept(WorkItem workItem)
@@ -76,11 +76,6 @@ namespace MangaManager.Tasks.Convert.Converter
                             //ignore those windows files...
                             continue;
                         }
-                        //else if (archiveReader.Entry.Attrib.HasValue && ((FileAttributes)archiveReader.Entry.Attrib.Value & FileAttributes.System) != FileAttributes.None)
-                        //{
-                        //    //Ignore files with System attributes (Thumbs.db...)
-                        //    continue;
-                        //}
                         else
                         {
                             throw new FormatException();
@@ -103,7 +98,7 @@ namespace MangaManager.Tasks.Convert.Converter
             {
                 File.Delete(file);
                 FileHelper.Move(workingPath, finalPath);
-                workItem.UpdateFilePath(finalPath);
+                workItem.UpdatePath(finalPath);
             }
         }
 

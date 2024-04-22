@@ -17,7 +17,7 @@ namespace MangaManager.Tasks.Convert.Converter
                 .Where(folder => !Directory.EnumerateDirectories(folder, "*", SearchOption.TopDirectoryOnly).Any())
                 .Where(folder => Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly).All(file => ImageDetection.TryGetImageExtensionFromFile(file, out var _) || Path.GetFileName(file).Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase)))
                 .OrderBy(filePath => filePath)
-                .Select(filePath => new WorkItem(filePath));
+                .Select(filePath => CacheWorkItems.Create(filePath));
         }
 
         public bool Accept(WorkItem workItem)
@@ -66,7 +66,7 @@ namespace MangaManager.Tasks.Convert.Converter
             if (isSuccess)
             {
                 Directory.Delete(folder, true);
-                workItem.UpdateFilePath(outputPath);
+                workItem.UpdatePath(outputPath);
             }
         }
     }
