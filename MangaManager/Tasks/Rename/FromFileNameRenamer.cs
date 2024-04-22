@@ -17,7 +17,7 @@ namespace MangaManager.Tasks.Rename
             return archiveInfo.IsZip;
         }
 
-        public bool Process(WorkItem workItem)
+        public void Process(WorkItem workItem)
         {
             var file = workItem.FilePath;
 
@@ -56,9 +56,6 @@ namespace MangaManager.Tasks.Rename
                 renamedPath = FileHelper.GetAvailableFilename(renamedPath);
                 FileHelper.Move(workingPath, renamedPath);
             }
-
-            workItem.WorkingFilePath = renamedPath;
-            return true;
         }
     }
 }

@@ -42,7 +42,7 @@ namespace MangaManager.Tasks.Convert.Converter
                 });
         }
 
-        public bool Process(WorkItem workItem)
+        public void Process(WorkItem workItem)
         {
             var file = workItem.FilePath;
             var outputPath = FileHelper.GetAvailableFilename(Path.Combine(Path.GetDirectoryName(file), $"{Path.GetFileNameWithoutExtension(file)}.cbz"));
@@ -50,9 +50,8 @@ namespace MangaManager.Tasks.Convert.Converter
             if (isSuccess)
             {
                 File.Delete(file);
-                workItem.WorkingFilePath = outputPath;
+                workItem.UpdateFilePath(outputPath);
             }
-            return isSuccess;
         }
     }
 }

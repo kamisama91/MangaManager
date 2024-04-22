@@ -60,12 +60,9 @@ namespace MangaManager.Tasks
                             fileName = $"{i:00000}.{archiveItemStream.Extension}";
                             i++;
                         }
-                        else
+                        else if (fileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
                         {
-                            if (fileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                comicInfo = ComicInfo.FromXmlStream(archiveItemStream.Stream);
-                            }
+                            comicInfo = ComicInfo.FromXmlStream(archiveItemStream.Stream);
                         }
 
                         var bytes = new byte[archiveItemStream.Stream.Length];
@@ -94,11 +91,11 @@ namespace MangaManager.Tasks
             return true; 
         }
 
-        public static bool UpdateZipWithArchiveItemStreams(string sourceFile, IEnumerable<ArchiveItemStream> createdItems = null, Dictionary<string, string> renamedItems = null, HashSet<string> deletedItems = null)
+        public static void UpdateZipWithArchiveItemStreams(string sourceFile, IEnumerable<ArchiveItemStream> createdItems = null, Dictionary<string, string> renamedItems = null, HashSet<string> deletedItems = null)
         {
             if (createdItems == null && renamedItems == null && deletedItems == null)
             {
-                return false;
+                return;
             }
 
             ComicInfo comicInfo = null;
@@ -152,7 +149,10 @@ namespace MangaManager.Tasks
             archiveInfo.HasSubdirectories = false;
             archiveInfo.ComicInfo = comicInfo;
 
-            return true;
+            if (WorkItem.Find(sourceFile) is WorkItem workItem) 
+            {
+                workItem.RestoreLastWriteTime();
+            }
         }
     }
 }

@@ -12,9 +12,8 @@
             return true;
         }
 
-        public bool Process(WorkItem workItem)
+        public void Process(WorkItem workItem)
         {
-            return false;
         }
     }
 }

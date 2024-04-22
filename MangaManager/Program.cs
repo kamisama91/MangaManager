@@ -166,15 +166,10 @@ namespace MangaManager
                     ProgressGui(workItem.InstanceId, WorkItem.InstancesCount, $"{{DarkBlue}}DOING:  {{Default}}{workingFilePath}");
 
                     var startTime = DateTime.Now;
-                    var hasAtLeastOneSuccess = Processors.Where(processor => processor.Accept(workItem))
-                                                         .Select(processor => processor.Process(workItem))
-                                                         .ToArray() //Force to run all accepted processors
-                                                         .Any(result => result);
-                    if (hasAtLeastOneSuccess) { workItem.RestoreLastWriteTime(); }
+                    Processors.Where(processor => processor.Accept(workItem))
+                              .ForEach(processor => processor.Process(workItem));
                     GC.Collect();
-
-                    var stepTotalMilliseconds = (long)((DateTime.Now - startTime).TotalMilliseconds);
-                    Interlocked.Add(ref TotalMilliseconds, stepTotalMilliseconds);
+                    Interlocked.Add(ref TotalMilliseconds, (long)((DateTime.Now - startTime).TotalMilliseconds));
 
                     ProgressGui(workItem.InstanceId, WorkItem.InstancesCount, $"{{Green}}DONE:   {{Default}}{workingFilePath}");
                 }

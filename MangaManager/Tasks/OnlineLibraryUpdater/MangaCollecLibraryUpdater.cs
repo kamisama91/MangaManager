@@ -15,9 +15,8 @@ namespace MangaManager.Tasks.OnlineLibraryUpdater
             return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && archiveInfo.HasComicInfo;
         }
 
-        public bool Process(WorkItem workItem)
+        public void Process(WorkItem workItem)
         {
-            return false;
         }
     }
 }

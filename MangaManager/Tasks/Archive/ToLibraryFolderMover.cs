@@ -52,7 +52,7 @@ namespace MangaManager.Tasks.Archive
             return BuildSerieNameFromComicInfo(info) + $" T{volume.ToString("N0").PadLeft(length, '0')}";
         }
 
-        public bool Process(WorkItem workItem)
+        public void Process(WorkItem workItem)
         {
             var file = workItem.FilePath;
 
@@ -98,7 +98,6 @@ namespace MangaManager.Tasks.Archive
                     if (allVolumesPresent)
                     {
                         FileHelper.Move(archiveFolderPath, archiveCompleteFolderPath);
-                        archiveFilePath = Path.Combine(archiveCompleteFolderPath, $"{fileName}.cbz");
                         archiveFolderPath = archiveCompleteFolderPath;
                     }
                 }
@@ -109,9 +108,6 @@ namespace MangaManager.Tasks.Archive
                 .Select(f => File.GetLastWriteTime(f))
                 .Max();
             Directory.SetLastWriteTime(archiveFolderPath, lastWriteTime);
-
-            workItem.WorkingFilePath = archiveFilePath;
-            return true;
         }
     }
 }

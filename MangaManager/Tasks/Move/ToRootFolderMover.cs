@@ -16,7 +16,7 @@ namespace MangaManager.Tasks.Move
             return archiveInfo.IsZip;
         }
 
-        public bool Process(WorkItem workItem)
+        public void Process(WorkItem workItem)
         {
             var file = workItem.FilePath;
 
@@ -30,9 +30,6 @@ namespace MangaManager.Tasks.Move
                 movedPath = FileHelper.GetAvailableFilename(movedPath);
                 FileHelper.Move(file, movedPath);
             }
-
-            workItem.WorkingFilePath = movedPath;
-            return true;
         }
     }
 }

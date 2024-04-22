@@ -30,22 +30,24 @@ namespace MangaManager.Tasks.Convert.Converter
             return _acceptdExtensions.Contains(Path.GetExtension(workingFileName));
         }
 
-        public bool Process(WorkItem workItem)
+        public void Process(WorkItem workItem)
         {
             var archiveInfo = ArchiveHelper.GetOrCreateArchiveInfo(workItem.FilePath);
 
             if (!archiveInfo.IsZip)
             {
-                return ConvertToCbz(workItem);
+                ConvertToCbz(workItem);
             }
 
-            if (archiveInfo.HasSubdirectories)
+            else if (archiveInfo.HasSubdirectories)
             {
-                return FlattenCbz(workItem);
+                FlattenCbz(workItem);
             }
-
-            //No conversion needed, juste extension update
-            return RenameToCbz(workItem);
+            else
+            {
+                //No conversion needed, just potential extension update
+                RenameToCbz(workItem);
+            }
         }
 
         private IEnumerable<ArchiveItemStream> GetArchiveItemStream(string file)
@@ -87,7 +89,7 @@ namespace MangaManager.Tasks.Convert.Converter
                 }
             }
         }
-        private bool ConvertToCbz(WorkItem workItem)
+        private void ConvertToCbz(WorkItem workItem)
         {
             var file = workItem.FilePath;
 
@@ -101,12 +103,11 @@ namespace MangaManager.Tasks.Convert.Converter
             {
                 File.Delete(file);
                 FileHelper.Move(workingPath, finalPath);
-                workItem.WorkingFilePath = finalPath;
+                workItem.UpdateFilePath(finalPath);
             }
-            return isSuccess;
         }
 
-        private bool FlattenCbz(WorkItem workItem)
+        private void FlattenCbz(WorkItem workItem)
         {
             var file = workItem.FilePath;
 
@@ -148,12 +149,11 @@ namespace MangaManager.Tasks.Convert.Converter
                 }
             }
 
-            var isFlattened = ArchiveHelper.UpdateZipWithArchiveItemStreams(file, renamedItems: renamedEntries, deletedItems: deletedEntries);
-            var isRenamed = RenameToCbz(workItem);
-            return isFlattened || isRenamed;
+            ArchiveHelper.UpdateZipWithArchiveItemStreams(file, renamedItems: renamedEntries, deletedItems: deletedEntries);
+            RenameToCbz(workItem);
         }
 
-        private bool RenameToCbz(WorkItem workItem)
+        private void RenameToCbz(WorkItem workItem)
         {
             var file = workItem.FilePath;
             var originalExtension = Path.GetExtension(file);
@@ -163,10 +163,7 @@ namespace MangaManager.Tasks.Convert.Converter
             { 
                 finalPath = FileHelper.GetAvailableFilename(finalPath);
                 FileHelper.Move(file, finalPath);
-                workItem.WorkingFilePath = finalPath;
-
             }
-            return needRename;
         }
     }
 }

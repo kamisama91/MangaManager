@@ -58,7 +58,7 @@ namespace MangaManager.Tasks.Convert.Converter
                 });
         }
 
-        public bool Process(WorkItem workItem)
+        public void Process(WorkItem workItem)
         {
             var folder = workItem.FilePath;
             var outputPath = FileHelper.GetAvailableFilename($"{folder}.cbz");
@@ -66,9 +66,8 @@ namespace MangaManager.Tasks.Convert.Converter
             if (isSuccess)
             {
                 Directory.Delete(folder, true);
-                workItem.WorkingFilePath = outputPath;
+                workItem.UpdateFilePath(outputPath);
             }
-            return isSuccess;
         }
     }
 }

@@ -107,7 +107,7 @@ namespace MangaManager.Tasks.Convert.Converter
             throw new FormatException();
         }
 
-        public bool Process(WorkItem workItem)
+        public void Process(WorkItem workItem)
         {
             var file = workItem.FilePath;
 
@@ -144,9 +144,8 @@ namespace MangaManager.Tasks.Convert.Converter
                 if (isSuccess)
                 {
                     File.Delete(file);
-                    workItem.WorkingFilePath = outputPath;
-                }                
-                return isSuccess;
+                    workItem.UpdateFilePath(outputPath);
+                }
             }
             finally
             {

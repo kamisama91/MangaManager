@@ -78,7 +78,15 @@ namespace MangaManager.Tasks
 
                 Directory.Move(path, newPath);
                 Directory.EnumerateFiles(newPath)
-                         .ForEach(file => CacheArchiveInfos.UpdatePath(file.Replace(newPath, path), file));
+                         .ForEach(file =>
+                         {
+                             var sourceFile = file.Replace(newPath, path);
+                             CacheArchiveInfos.UpdatePath(sourceFile, file);
+                             if (WorkItem.Find(sourceFile) is WorkItem workItem)
+                             {
+                                 workItem.UpdateFilePath(file);
+                             }
+                         });
             }
             else if (File.Exists(path))
             {
@@ -89,6 +97,10 @@ namespace MangaManager.Tasks
 
                 File.Move(path, newPath);
                 CacheArchiveInfos.UpdatePath(path, newPath);
+                if (WorkItem.Find(path) is WorkItem workItem)
+                {
+                    workItem.UpdateFilePath(newPath);
+                }
 
                 var sourcefolder = Path.GetDirectoryName(path);
                 while (sourcefolder.TrimEnd(Path.DirectorySeparatorChar) != Program.Options.SourceFolder.TrimEnd(Path.DirectorySeparatorChar)

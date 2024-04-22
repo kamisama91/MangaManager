@@ -20,7 +20,7 @@ namespace MangaManager.Tasks.Tag
             return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && (Program.Options.TagForce || !archiveInfo.HasComicInfo);
         }
 
-        public bool Process(WorkItem workItem)
+        public void Process(WorkItem workItem)
         {
             var file = workItem.FilePath;
 
@@ -35,7 +35,7 @@ namespace MangaManager.Tasks.Tag
             if (serieInfo == null)
             {
                 Program.View.Error($"Missing metadata: {file}");
-                return false;
+                return;
             }
 
             var volumeInfo = serieInfo.Volumes?.SingleOrDefault(v => v.Number == volume);
@@ -92,7 +92,7 @@ namespace MangaManager.Tasks.Tag
                 comicInfo.Day = volumeInfo.ReleaseDate.Day.ToString();
             }
 
-            return ArchiveHelper.UpdateZipWithArchiveItemStreams(file, createdItems: new[] { new ArchiveItemStream { FileName = ComicInfo.NAME, Stream = comicInfo.ToXmlStream() } });
+            ArchiveHelper.UpdateZipWithArchiveItemStreams(file, createdItems: new[] { new ArchiveItemStream { FileName = ComicInfo.NAME, Stream = comicInfo.ToXmlStream() } });
         }
     }
 }

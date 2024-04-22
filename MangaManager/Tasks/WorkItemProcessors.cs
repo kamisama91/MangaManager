@@ -59,6 +59,6 @@ namespace MangaManager.Tasks
     public interface IWorkItemProcessor
     {
         public bool Accept(WorkItem workItem);
-        public bool Process(WorkItem workItem);
+        public void Process(WorkItem workItem);
     }
 }
