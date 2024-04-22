@@ -33,7 +33,7 @@ namespace MangaManager
             try
             {
                 //Create Workers producer
-                var producer = new WorkItemsProducer { Providers = WorkItemProcessors.Converters.OfType<IWorkItemProvider>().ToArray() };
+                var producer = new WorkItemsProducer { Providers = WorkItemProcessors.Providers };
 
                 //Create Workers consumers
                 var consumers = new WorkItemsConsumer[]

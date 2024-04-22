@@ -6,11 +6,14 @@ using MangaManager.Tasks.Rename;
 using MangaManager.Tasks.Scrap;
 using MangaManager.Tasks.Tag;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MangaManager.Tasks
 {
     public class WorkItemProcessors
     {
+        public static IWorkItemProvider[] Providers => Converters.OfType<IWorkItemProvider>().ToArray();
+
         public static IWorkItemProcessor[] Converters =
         [
             new ArchiveConverter(),
