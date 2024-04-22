@@ -13,7 +13,7 @@ namespace MangaManager.Tasks
 {
     public static class ArchiveHelper
     {
-        private static ArchiveInfo BuildArchiveInfo (string archiveFile)
+        public static ArchiveInfo BuildArchiveInfo (string archiveFile)
         {
             var archiveInfo = new ArchiveInfo();
             using (var archive = ArchiveFactory.Open(archiveFile))
@@ -29,18 +29,6 @@ namespace MangaManager.Tasks
                     archiveInfo.ComicInfo = ComicInfo.FromXmlStream(entryMemoryStream);
                 }
             }
-            return archiveInfo;
-        }
-
-        public static ArchiveInfo GetOrCreateArchiveInfo(string archiveFile)
-        {
-            if (CacheArchiveInfos.Exists(archiveFile))
-            {
-                return CacheArchiveInfos.Get(archiveFile);
-            }
-
-            var archiveInfo = BuildArchiveInfo(archiveFile);
-            CacheArchiveInfos.CreateOrUpdate(archiveFile, archiveInfo);
             return archiveInfo;
         }
 
@@ -80,13 +68,10 @@ namespace MangaManager.Tasks
                 return false;
             }
 
-            var archiveInfo = new ArchiveInfo()
-            {
-                IsZip = true,
-                HasSubdirectories = false,
-                ComicInfo = comicInfo
-            };
-            CacheArchiveInfos.CreateOrUpdate(outputFile, archiveInfo);
+            var archiveInfo = CacheArchiveInfos.GetOrCreate(outputFile);
+            archiveInfo.IsZip = true;
+            archiveInfo.HasSubdirectories = false;
+            archiveInfo.ComicInfo = comicInfo;
 
             return true; 
         }
@@ -145,7 +130,7 @@ namespace MangaManager.Tasks
                 archive.Save();
             }
 
-            var archiveInfo = GetOrCreateArchiveInfo(sourceFile);
+            var archiveInfo = CacheArchiveInfos.GetOrCreate(sourceFile);
             archiveInfo.HasSubdirectories = false;
             archiveInfo.ComicInfo = comicInfo;
 

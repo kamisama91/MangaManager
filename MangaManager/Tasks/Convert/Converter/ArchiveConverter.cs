@@ -32,7 +32,7 @@ namespace MangaManager.Tasks.Convert.Converter
 
         public void Process(WorkItem workItem)
         {
-            var archiveInfo = ArchiveHelper.GetOrCreateArchiveInfo(workItem.FilePath);
+            var archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
 
             if (!archiveInfo.IsZip)
             {

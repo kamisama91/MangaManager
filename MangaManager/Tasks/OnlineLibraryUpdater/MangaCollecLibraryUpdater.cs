@@ -11,7 +11,7 @@ namespace MangaManager.Tasks.OnlineLibraryUpdater
                 return false;
             }
 
-            var archiveInfo = ArchiveHelper.GetOrCreateArchiveInfo(workItem.FilePath);
+            var archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
             return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && archiveInfo.HasComicInfo;
         }
 
