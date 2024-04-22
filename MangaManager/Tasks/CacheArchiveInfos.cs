@@ -12,6 +12,9 @@ namespace MangaManager.Tasks
         public bool HasSubdirectories { get; set; }
         public bool HasComicInfo => ComicInfo != null;
         public ComicInfo ComicInfo { get; set; }
+
+        //Must not be called except by CacheArchiveInfos.GetOrCreate
+        public ArchiveInfo() { }
     }
 
     public struct ArchiveInfosCounters
@@ -37,7 +40,7 @@ namespace MangaManager.Tasks
             }
 
             Interlocked.Increment(ref s_Counters.Misses);
-            var archiveInfo = ArchiveHelper.BuildArchiveInfo(path);
+            var archiveInfo = ArchiveHelper.GetArchiveInfo(path);
             s_ArchiveInfoCache[path] = archiveInfo;
             return archiveInfo;
         }

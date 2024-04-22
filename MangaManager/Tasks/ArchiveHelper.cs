@@ -13,7 +13,7 @@ namespace MangaManager.Tasks
 {
     public static class ArchiveHelper
     {
-        public static ArchiveInfo BuildArchiveInfo (string archiveFile)
+        public static ArchiveInfo GetArchiveInfo(string archiveFile)
         {
             var archiveInfo = new ArchiveInfo();
             using (var archive = ArchiveFactory.Open(archiveFile))
@@ -73,7 +73,7 @@ namespace MangaManager.Tasks
             archiveInfo.HasSubdirectories = false;
             archiveInfo.ComicInfo = comicInfo;
 
-            return true; 
+            return true;
         }
 
         public static void UpdateZipWithArchiveItemStreams(string sourceFile, IEnumerable<ArchiveItemStream> createdItems = null, Dictionary<string, string> renamedItems = null, HashSet<string> deletedItems = null)
@@ -94,7 +94,7 @@ namespace MangaManager.Tasks
                     {
                         if (archiveItemStream.FileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
                         {
-                             comicInfo = ComicInfo.FromXmlStream(archiveItemStream.Stream);
+                            comicInfo = ComicInfo.FromXmlStream(archiveItemStream.Stream);
                         }
                         var bytes = new byte[archiveItemStream.Stream.Length];
                         archiveItemStream.Stream.Read(bytes, 0, bytes.Length);
