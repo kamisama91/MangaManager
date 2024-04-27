@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using MangaManager.Tasks;
+using MangaManager.View;
 using SharpCompress;
 using System;
 using System.Collections.Generic;
@@ -18,17 +19,28 @@ namespace MangaManager
             Parser.Default
                 .ParseArguments<Options>(args)
                 .MapResult(
-                    opts => Environment.ExitCode = Run(opts).Result,
+                    opts => Environment.ExitCode = RunWithView(opts).Result,
                     errs => Environment.ExitCode = -2);
         }
 
         public static Options Options { get; private set; }
-        public static View.View View { get; private set; }
+        public static ViewController View { get; private set; }
+
+        private static async Task<int> RunWithView(Options options)
+        {
+            Options = options;
+            View = new ViewController();
+
+            var exitCode = 0;            
+            View.ViewLoaded += async (s, e) => { exitCode = await Run(options); };
+            View.Show();
+            return await Task.FromResult(exitCode);
+        }
 
         private static async Task<int> Run(Options options)
         {
-            Options = options;
-            View = new View.View();
+            Options ??= options;
+            View ??= new ViewController();
 
             try
             {

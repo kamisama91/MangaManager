@@ -3,6 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <AssemblyVersion>2.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,20 +15,17 @@
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="DotNetZip" Version="1.16.0" />
     <PackageReference Include="EpubCore" Version="1.6.1" />
-    <PackageReference Include="Goblinfactory.Konsole" Version="6.2.2" />
     <PackageReference Include="IronPython.StdLib" Version="3.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="PdfPig" Version="0.1.8" />
     <PackageReference Include="pt.KeePassLibStd" Version="2.50.0.4849" />
     <PackageReference Include="SharpCompress" Version="0.36.0" />
+    <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
+    <PackageReference Include="Terminal.Gui" Version="1.16.0" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="$(ProjectDir)python\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\ExternalModels\MangaCollec\" />
-  </ItemGroup>
-  
 </Project>
