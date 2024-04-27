@@ -67,7 +67,7 @@ namespace MangaManager.Tasks.Archive
             //Guess Library File name and move into Library/Quarantine folder
             var fileName = BuildVolumeNameFromComicInfo(comicInfo);
             var archiveFilePath = Path.Combine(archiveFolderPath, $"{fileName}.cbz");
-            if (File.Exists(archiveFilePath))
+            if (archiveFilePath != file && File.Exists(archiveFilePath))
             {
                 archiveFilePath = FileHelper.GetAvailableFilename(Path.Combine(Program.Options.QuarantineFolder, $"{fileName}.cbz"));
                 Program.View.Error($"{Path.GetFileName(archiveFilePath)} already in library, put in quarantine");
