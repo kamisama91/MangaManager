@@ -4,9 +4,14 @@
       "commandName": "Project",
       "commandLineArgs": "--input \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\" --output \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\\__archive\" --quarantine \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\\__quarantine\" --convert --rename --move --scrap --tag --online-update --archive"
     },
-    "WSL": {
+    "WSL - Ubuntu": {
       "commandName": "WSL2",
       "distributionName": "Ubuntu",
+      "commandLineArgs": "\"{OutDir}/MangaManager.dll\" --input /mnt/d/MesDocuments/Alexandre/Bureau/tmp/__ --output \"/mnt/d/MesDocuments/Alexandre/Bureau/tmp/__/__archive\" --quarantine \"/mnt/d/MesDocuments/Alexandre/Bureau/tmp/__/__quarantine\" --convert --rename --move --scrap --tag --online-update --archive"
+    },
+    "WSL - Alpine": {
+      "commandName": "WSL2",
+      "distributionName": "Alpine",
       "commandLineArgs": "\"{OutDir}/MangaManager.dll\" --input /mnt/d/MesDocuments/Alexandre/Bureau/tmp/__ --output \"/mnt/d/MesDocuments/Alexandre/Bureau/tmp/__/__archive\" --quarantine \"/mnt/d/MesDocuments/Alexandre/Bureau/tmp/__/__quarantine\" --convert --rename --move --scrap --tag --online-update --archive"
     }
   }
