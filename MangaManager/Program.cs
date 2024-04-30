@@ -99,7 +99,7 @@ namespace MangaManager
 
             //Producing messages and wait for end of consumming
             await producer.ProduceDataAsync();
-            await Task.WhenAll(consumers.Select(c => c.ConsumeDataAsync()).ToArray());
+            await Task.WhenAll(consumers.Select(c => c.ConsumeDataAsync()));
         }
 
         private class WorkItemsProducer()
