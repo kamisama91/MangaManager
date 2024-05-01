@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 
@@ -8,43 +7,43 @@ namespace MangaManager.Models
     public class Serie
     {
         [JsonProperty("Alias")]
-        public string Alias { get; init; }
+        public string Alias { get; set; }
 
         [JsonProperty("Name")]
-        public string Name { get; init; }
+        public string Name { get; set; }
 
         [JsonProperty("Edition")]
-        public string Edition { get; init; }
+        public string Edition { get; set; }
 
         [JsonProperty("Writer")]
-        public string Writer { get; init; }
+        public string Writer { get; set; }
 
         [JsonProperty("Penciler")]
-        public string Penciler { get; init; }
+        public string Penciler { get; set; }
 
         [JsonProperty("Publisher")]
-        public string Publisher { get; init; }
+        public string Publisher { get; set; }
 
         [JsonProperty("Keywords", NullValueHandling = NullValueHandling.Ignore)]
-        public List<string> Keywords { get; init; }
+        public List<string> Keywords { get; set; }
 
         [JsonProperty("LastVolume")]
-        public int? LastVolume { get; init; }
+        public int? LastVolume { get; set; }
 
         [JsonProperty("IsInterrupted")]
-        public bool IsInterrupted { get; init; }
+        public bool IsInterrupted { get; set; }
 
         [JsonProperty("Volumes", NullValueHandling = NullValueHandling.Ignore)]
-        public List<Volume> Volumes { get; init; }
+        public List<Volume> Volumes { get; set; }
 
         [JsonProperty("Id")]
-        public string MangaCollecSerieId { get; init; }
+        public string MangaCollecSerieId { get; set; }
 
         [JsonProperty("EditionId")]
-        public string MangaCollecEditionId { get; init; }
+        public string MangaCollecEditionId { get; set; }
 
         [JsonProperty("LastUpdateDate")]
         [JsonConverter(typeof(CustomDateTimeConverter))]
-        public DateTime LastUpdateDate { get; init; }
+        public DateTime LastUpdateDate { get; set; }
     }
 }

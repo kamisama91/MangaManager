@@ -22,7 +22,7 @@ namespace MangaManager.Models.ExternalModels.MangaCollec
         public DateTime ReleaseDate { get; init; }
 
         [JsonProperty("isbn")]
-        public string Isbn { get; init; }
+        public string ISBN { get; init; }
 
         [JsonProperty("not_sold")]
         public bool NotSold { get; init; }

@@ -6,22 +6,22 @@ namespace MangaManager.Models
     public class Volume
     {
         [JsonProperty("Number")]
-        public int Number { get; init; }
+        public int Number { get; set; }
 
         [JsonProperty("Name")]
-        public string Name { get; init; }
+        public string Name { get; set; }
 
         [JsonProperty("Summary")]
-        public string Summary { get; init; }
+        public string Summary { get; set; }
 
         [JsonProperty("ISBN")]
-        public string ISBN { get; init; }
+        public string ISBN { get; set; }
 
         [JsonProperty("Date")]
         [JsonConverter(typeof(CustomDateTimeConverter))]
-        public DateTime ReleaseDate { get; init; }
+        public DateTime ReleaseDate { get; set; }
 
         [JsonProperty("Id")]
-        public string MangaCollecVolumeId { get; init; }
+        public string MangaCollecVolumeId { get; set; }
     }
 }
