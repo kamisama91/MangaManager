@@ -20,6 +20,7 @@ namespace MangaManager.View
         public ProgressBarWithDescriptionView _onlineUpdateProgressBar { get; private set; }
         public ProgressBarWithDescriptionView _archiveProgressBar { get; private set; }
         public ScrollableMultiColorTextView _logTextView { get; private set; }
+        public UserInputView _userInputView { get; private set; }
 
         public MainView()
         {
@@ -31,21 +32,21 @@ namespace MangaManager.View
             ColorScheme = new ColorScheme { Normal = new Attribute(Color.White, Color.Black) };
 
 
-            _tasks = new FrameView("Tasks")
+            _tasks = new FrameView("")
             {
                 X = 0,
                 Y = 0,
                 Height = 16,
                 Width = Dim.Percent(75),
             };
-            var prompt = new FrameView("Prompt")
+            var prompt = new FrameView("")
             {
                 X = Pos.Right(_tasks),
                 Y = 0,
                 Height = 16,
                 Width = Dim.Fill(),
             };
-            var logs = new FrameView("Logs")
+            var logs = new FrameView("")
             {
                 X = 0,
                 Y = Pos.Bottom(_tasks),
@@ -62,13 +63,20 @@ namespace MangaManager.View
             _archiveProgressBar = BuildProgressBar("Archive", Program.Options.Archive);
 
             //prompt
-            //prompt.Add(form);
+            _userInputView = new UserInputView()
+            {
+                X = 1,
+                Y = 0,
+                Height = Dim.Fill(),
+                Width = Dim.Fill(1),
+            };
+            prompt.Add(_userInputView);
 
             _logTextView = new ScrollableMultiColorTextView
             {
                 X = 1,
-                Y = 1,
-                Height = Dim.Fill(1),
+                Y = 0,
+                Height = Dim.Fill(),
                 Width = Dim.Fill(1),
                 Multiline = true,
                 ScrollBarVisible = true,

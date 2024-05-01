@@ -117,6 +117,18 @@ namespace MangaManager.View
             }
         }
 
+        public string AskUserInput(string message)
+        {
+            if (_view?._userInputView != null)
+            {
+                lock (_view._userInputView)
+                {
+                    return _view._userInputView.AskUserInput(message);
+                }
+            }
+            return null;
+        }
+
         public void Info(string message)
         {
             Log(message, ConsoleColor.DarkBlue);

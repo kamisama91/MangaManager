@@ -16,8 +16,8 @@ namespace MangaManager.View
             s_colorAttributes[ConsoleColor.DarkGreen.ToString()] = s_colorAttributes[Color.Green.ToString()];
             s_colorAttributes[ConsoleColor.DarkCyan.ToString()] = s_colorAttributes[Color.Cyan.ToString()];
             s_colorAttributes[ConsoleColor.DarkRed.ToString()] = s_colorAttributes[Color.Red.ToString()];
-            s_colorAttributes[ConsoleColor.DarkMagenta.ToString()] = s_colorAttributes[Color.Brown.ToString()];
-            s_colorAttributes[ConsoleColor.DarkYellow.ToString()] = s_colorAttributes[Color.Magenta.ToString()];
+            s_colorAttributes[ConsoleColor.DarkMagenta.ToString()] = s_colorAttributes[Color.Magenta.ToString()];
+            s_colorAttributes[ConsoleColor.DarkYellow.ToString()] = s_colorAttributes[Color.Brown.ToString()];
             s_colorAttributes[ConsoleColor.Blue.ToString()] = s_colorAttributes[Color.BrightBlue.ToString()];
             s_colorAttributes[ConsoleColor.Green.ToString()] = s_colorAttributes[Color.BrightGreen.ToString()];
             s_colorAttributes[ConsoleColor.Cyan.ToString()] = s_colorAttributes[Color.BrightCyan.ToString()];
