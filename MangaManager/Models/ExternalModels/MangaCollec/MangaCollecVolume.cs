@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MangaManager.Models.JsonConverters;
+using Newtonsoft.Json;
 using System;
 
 namespace MangaManager.Models.ExternalModels.MangaCollec
@@ -18,7 +19,7 @@ namespace MangaManager.Models.ExternalModels.MangaCollec
         public int Number { get; init; }
 
         [JsonProperty("release_date")]
-        [JsonConverter(typeof(CustomDateTimeConverter))]
+        [JsonConverter(typeof(CustomDateJsonConverter))]
         public DateTime ReleaseDate { get; init; }
 
         [JsonProperty("isbn")]

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MangaManager.Models.JsonConverters;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -43,7 +44,7 @@ namespace MangaManager.Models
         public string MangaCollecEditionId { get; set; }
 
         [JsonProperty("LastUpdateDate")]
-        [JsonConverter(typeof(CustomDateTimeConverter))]
+        [JsonConverter(typeof(CustomDateJsonConverter))]
         public DateTime LastUpdateDate { get; set; }
     }
 }

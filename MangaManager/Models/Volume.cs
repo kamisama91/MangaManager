@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MangaManager.Models.JsonConverters;
+using Newtonsoft.Json;
 using System;
 
 namespace MangaManager.Models
@@ -18,7 +19,7 @@ namespace MangaManager.Models
         public string ISBN { get; set; }
 
         [JsonProperty("Date")]
-        [JsonConverter(typeof(CustomDateTimeConverter))]
+        [JsonConverter(typeof(CustomDateJsonConverter))]
         public DateTime ReleaseDate { get; set; }
 
         [JsonProperty("Id")]

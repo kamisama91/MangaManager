@@ -34,7 +34,7 @@ namespace MangaManager.Tasks.Tag
             var serieInfo = CacheMetadatas.Series.SingleOrDefault(s => s.Alias == serie /*||  FileHelper.GetOsCompliantName(s.Name) == serie*/);
             if (serieInfo == null)
             {
-                Program.View.Error($"Missing metadata: {file}");
+                Program.View.Error($"Missing metadata: {Path.GetFileName(file)}");
                 return;
             }
 
