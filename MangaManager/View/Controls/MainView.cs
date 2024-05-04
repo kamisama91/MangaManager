@@ -37,7 +37,7 @@ namespace MangaManager.View
                 X = 0,
                 Y = 0,
                 Height = 16,
-                Width = Dim.Percent(75),
+                Width = Dim.Percent(60),
             };
             var prompt = new FrameView("")
             {
