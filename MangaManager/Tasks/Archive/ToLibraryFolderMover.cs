@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using MangaManager.Models;
+using MangaManager.Tasks.Rename;
 
 namespace MangaManager.Tasks.Archive
 {
@@ -40,10 +41,6 @@ namespace MangaManager.Tasks.Archive
 
         private string BuildVolumeNameFromComicInfo(ComicInfo info)
         {
-            ///TODO
-            //Check file is flagged as Tagged
-            //var tagSuffix = Regex.IsMatch(filename, @"\[tag\]|\(tag\)", RegexOptions.IgnoreCase) ? " (tag)" : string.Empty;
-
             var volume = int.Parse(info.Number);
             var lastVolume = !string.IsNullOrEmpty(info.Count) ? int.Parse(info.Count) : 0;
             var length = lastVolume > 0
@@ -55,7 +52,6 @@ namespace MangaManager.Tasks.Archive
         public void Process(WorkItem workItem)
         {
             var file = workItem.FilePath;
-
             var comicInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath).ComicInfo;
 
             //Guess Library Folder name
@@ -65,9 +61,13 @@ namespace MangaManager.Tasks.Archive
             if (Directory.Exists(archiveCompleteFolderPath)) { archiveFolderPath = archiveCompleteFolderPath; }
 
             //Guess Library File name and move into Library/Quarantine folder
-            var fileName = BuildVolumeNameFromComicInfo(comicInfo);
+            var regularFileName = BuildVolumeNameFromComicInfo(comicInfo);
+            var taggedFileName = $"{regularFileName} (tag)";
+            var fileName = FileNameParser.Parse(file).IsTagged ? taggedFileName : regularFileName;
+            var archiveRegularFilePath = Path.Combine(archiveFolderPath, $"{regularFileName}.cbz");
+            var archiveTaggedFilePath = Path.Combine(archiveFolderPath, $"{taggedFileName}.cbz");
             var archiveFilePath = Path.Combine(archiveFolderPath, $"{fileName}.cbz");
-            if (archiveFilePath != file && File.Exists(archiveFilePath))
+            if (archiveFilePath != file && (File.Exists(archiveRegularFilePath) || File.Exists(archiveTaggedFilePath)))
             {
                 archiveFilePath = FileHelper.GetAvailableFilename(Path.Combine(Program.Options.QuarantineFolder, $"{fileName}.cbz"));
                 Program.View.Error($"{Path.GetFileName(archiveFilePath)} already in library, put in quarantine");
