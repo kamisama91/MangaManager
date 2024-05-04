@@ -29,7 +29,7 @@ namespace MangaManager.Tasks.Scrap
             var file = workItem.FilePath;
 
             var parsedFileName = FileNameParser.Parse(Path.GetFileNameWithoutExtension(file));
-            var serie = CacheMetadatas.Series.SingleOrDefault(s => s.Alias == parsedFileName.Serie);
+            var serie = CacheMetadatas.Series.SingleOrDefault(s => s.Alias == parsedFileName.Serie.ToLowerInvariant());
             if (serie == null)
             {
                 CreateSerie(parsedFileName.Serie, parsedFileName.Volume);
@@ -41,7 +41,7 @@ namespace MangaManager.Tasks.Scrap
         }       
         private void CreateSerie(string name, int volume)
         {
-            var serie = new Serie() {  Alias = name };
+            var serie = new Serie() {  Alias = name.ToLowerInvariant() };
             if(s_IgnoredAlias.Contains(serie.Alias))
             {
                 //Serie has already been ignored
@@ -168,14 +168,14 @@ namespace MangaManager.Tasks.Scrap
 
             var edition = MangaCollecHttpClients.Api.GetDataStore<MangaCollecEdition>($"/v1/editions/{serie.MangaCollecEditionId}");
             var volumes = edition.Volumes
-                    .Where(v => v.ReleaseDate <= DateTime.Today)
+                    .Where(v => v.ReleaseDate.HasValue && v.ReleaseDate <= DateTime.Today)
                     .Select(v => MangaCollecHttpClients.Api.GetDataStore<MangaCollecVolumeDetail>($"/v1/volumes/{v.Id}"))
                     .Select(v => new Volume()
                     {
                         Number = v.Number,
                         Name = !string.IsNullOrEmpty(v.Title) ? v.Title : $"Tome {v.Number}",
                         Summary = v.Content,
-                        ReleaseDate = v.ReleaseDate,
+                        ReleaseDate = v.ReleaseDate.Value,
                         ISBN = v.ISBN,
                         MangaCollecVolumeId = v.Id
                     })

@@ -20,7 +20,7 @@ namespace MangaManager.Models.ExternalModels.MangaCollec
 
         [JsonProperty("release_date")]
         [JsonConverter(typeof(CustomDateJsonConverter))]
-        public DateTime ReleaseDate { get; init; }
+        public DateTime? ReleaseDate { get; init; }
 
         [JsonProperty("isbn")]
         public string ISBN { get; init; }
