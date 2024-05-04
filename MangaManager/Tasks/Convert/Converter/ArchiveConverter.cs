@@ -112,7 +112,7 @@ namespace MangaManager.Tasks.Convert.Converter
             using (var archive = Ionic.Zip.ZipFile.Read(file))
             {
                 int i = 0;
-                foreach (var entry in archive.Where(e => !e.IsDirectory).ToArray())
+                foreach (var entry in archive.Where(e => !e.IsDirectory).OrderBy(e => e.FileName).ToArray())
                 {
                     using var entryStream = entry.OpenReader();
                     using var entryMemoryStream = new MemoryStream();
