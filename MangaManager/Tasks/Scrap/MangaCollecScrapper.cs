@@ -29,7 +29,7 @@ namespace MangaManager.Tasks.Scrap
             var file = workItem.FilePath;
 
             var parsedFileName = FileNameParser.Parse(Path.GetFileNameWithoutExtension(file));
-            var serie = CacheMetadatas.Series.SingleOrDefault(s => s.Alias == parsedFileName.Serie.ToLowerInvariant());
+            var serie = CacheMetadatas.Series.SingleOrDefault(s => s.Aliases.Contains(parsedFileName.Serie.ToLowerInvariant()));
             if (serie == null)
             {
                 CreateSerie(parsedFileName.Serie, parsedFileName.Volume);
@@ -41,12 +41,14 @@ namespace MangaManager.Tasks.Scrap
         }       
         private void CreateSerie(string name, int volume)
         {
-            var serie = new Serie() {  Alias = name.ToLowerInvariant() };
-            if(s_IgnoredAlias.Contains(serie.Alias))
+            var alias = name.ToLowerInvariant();
+            if(s_IgnoredAlias.Contains(alias))
             {
                 //Serie has already been ignored
                 return;
             }
+
+            var serie = new Serie();
 
             var acceptedTypes = MangaCollecHttpClients.Api.GetDataStore<MangaCollecType[]>("/v1/types")
                         .Where(t => !t.ToDisplay)
@@ -54,7 +56,7 @@ namespace MangaManager.Tasks.Scrap
                         .ToArray();
 
             var matchedSeries = MangaCollecHttpClients.Api.GetDataStore<MangaCollecSerie[]>("/v1/series")
-                        .Where(s => FormatName(s.Title) == FormatName(serie.Alias))
+                        .Where(s => FormatName(s.Title) == FormatName(alias))
                         .Where(s => acceptedTypes.Any(t => t.Id == s.TypeId))
                         .ToArray();
 
@@ -65,11 +67,9 @@ namespace MangaManager.Tasks.Scrap
             }
             else
             {
-                var message = $"{{{ConsoleColor.White}}}Serie: {{{ConsoleColor.DarkYellow}}}{serie.Alias}{Environment.NewLine}";
+                var message = $"{{{ConsoleColor.White}}}Serie: {{{ConsoleColor.DarkYellow}}}{alias}{Environment.NewLine}";
                 for (var i = 0; i < matchedSeries.Length; i++) { message += $"{{{ConsoleColor.White}}}   {i} -> {matchedSeries[i].Title}{Environment.NewLine}"; }
                 message += $"{{{ConsoleColor.DarkGray}}}   {matchedSeries.Length} -> MangaCollec ID{Environment.NewLine}";
-                //message += $"{{{ConsoleColor.DarkGray}}}   {matchedSeries.Length + 1} -> Manual input{Environment.NewLine}";
-                //message += $"{{{ConsoleColor.DarkGray}}}   {matchedSeries.Length + 2} -> Ignore{Environment.NewLine}";
                 message += $"{{{ConsoleColor.DarkGray}}}   {matchedSeries.Length + 1} -> Ignore{Environment.NewLine}";
 
                 var userChoiceStr = Program.View.AskUserInput(message);
@@ -81,74 +81,80 @@ namespace MangaManager.Tasks.Scrap
                 else if(userChoice == matchedSeries.Length) 
                 {
                     message = $"{{{ConsoleColor.White}}}Serie: {{{ConsoleColor.DarkYellow}}}{name}{Environment.NewLine}";
-                    message += $"{{{ConsoleColor.White}}}   MangaCollec ID?";
+                    message += $"{{{ConsoleColor.White}}}   MangaCollec ID?{Environment.NewLine}";
                     serieId = Program.View.AskUserInput(message);
                 }
-                /*else if (userChoice == (matchedSeries.Length + 1))
-                {
-                    serieId = string.Empty;
-                }*/
                 else
                 {
-                    s_IgnoredAlias.Add(serie.Alias);
+                    s_IgnoredAlias.Add(alias);
                     return;
                 }
             }
 
-            if (!string.IsNullOrEmpty(serieId)) 
+            var serieDetails = MangaCollecHttpClients.Api.GetDataStore<MangaCollecSerieDetail>($"/v1/series/{serieId}");
+            serie.Name = serieDetails.Title;
+            serie.Writer = serieDetails.Tasks.Where(t => Regex.IsMatch(t.Job.Title.ToLowerInvariant(), "sc.nario|auteur")).Select(t => $"{t.Author.Name.Trim()} {t.Author.FirstName.Trim()}").FirstOrDefault();
+            serie.Penciler = serieDetails.Tasks.Where(t => Regex.IsMatch(t.Job.Title.ToLowerInvariant(), "dessin|auteur")).Select(t => $"{t.Author.Name.Trim()} {t.Author.FirstName.Trim()}").FirstOrDefault();
+            serie.Keywords = serieDetails.Kinds.Select(k => k.Title).OrderBy(k => k).ToList();
+            serie.MangaCollecSerieId = serieDetails.Id;
+
+            var matchedEditions = serieDetails.Editions
+                                .Where(e => string.IsNullOrEmpty(e.Title) || !Regex.IsMatch(e.Title, @"^(Pack|Coffret)$|^(Pack|Coffret)\s+|\s+(Pack|Coffret)$"))
+                                .ToArray();
+
+            var editionId = string.Empty;
+            if (matchedEditions.Length == 1)
             {
-                var serieDetails = MangaCollecHttpClients.Api.GetDataStore<MangaCollecSerieDetail>($"/v1/series/{serieId}");
-                serie.Name = serieDetails.Title;
-                serie.Writer = serieDetails.Tasks.Where(t => Regex.IsMatch(t.Job.Title.ToLowerInvariant(), "sc.nario|auteur")).Select(t => $"{t.Author.Name.Trim()} {t.Author.FirstName.Trim()}").FirstOrDefault();
-                serie.Penciler = serieDetails.Tasks.Where(t => Regex.IsMatch(t.Job.Title.ToLowerInvariant(), "dessin|auteur")).Select(t => $"{t.Author.Name.Trim()} {t.Author.FirstName.Trim()}").FirstOrDefault();
-                serie.Keywords = serieDetails.Kinds.Select(k => k.Title).OrderBy(k => k).ToList();
-                serie.MangaCollecSerieId = serieDetails.Id;
-
-                var matchedEditions = serieDetails.Editions
-                                    .Where(e => string.IsNullOrEmpty(e.Title) || !Regex.IsMatch(e.Title, @"^(Pack|Coffret)$|^(Pack|Coffret)\s+|\s+(Pack|Coffret)$"))
-                                    .ToArray();
-
-                var editionId = string.Empty;
-                if (matchedEditions.Length == 1)
-                {
-                    editionId = matchedEditions[0].Id;
-                }
-                else
-                {
-                    var nbPublishers = matchedEditions.Select(e => e.Publisher.Title).Distinct().Count();
-                    var message = $"{{{ConsoleColor.White}}}Edition: {{{ConsoleColor.DarkYellow}}}{serie.Name}{Environment.NewLine}";
-                    for (var i = 0; i < matchedEditions.Length; i++)
-                    {
-                        message += $"{{{ConsoleColor.White}}}   {i} -> {matchedEditions[i].Title ?? "Edition Simple"}";
-                        if (nbPublishers > 1) { message += $" ({matchedEditions[i].Publisher.Title})"; }
-                        message += $" - {matchedEditions[i].VolumesCount} vol.";
-                        if (matchedEditions[i].NotFinished) { message += $" (interrompu)"; }
-                        else if ((matchedEditions[i].LastVolumeNumber > 0 && matchedEditions[i].VolumesCount == matchedEditions[i].LastVolumeNumber) || (matchedEditions[i].LastVolumeNumber == 0 && matchedEditions[i].VolumesCount == 1)) { message += $" (complet)"; }
-                        message += Environment.NewLine;
-                    }
-                    var userChoiceStr = Program.View.AskUserInput(message);
-                    var userChoice = int.TryParse(userChoiceStr, out var _i) ? _i : matchedSeries.Length + 2;
-                    if (userChoice < matchedEditions.Length)
-                    {
-                        editionId = matchedEditions[userChoice].Id;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(editionId))
-                {
-                    var edition = matchedEditions.Single(e => e.Id == editionId);
-                    serie.Edition = edition.Title ?? "Edition Simple";
-                    serie.Publisher = edition.Publisher.Title;
-                    serie.MangaCollecEditionId = edition.Id;
-                }
+                editionId = matchedEditions[0].Id;
             }
             else
             {
-                //Manual Input
+                var nbPublishers = matchedEditions.Select(e => e.Publisher.Title).Distinct().Count();
+                var message = $"{{{ConsoleColor.White}}}Edition: {{{ConsoleColor.DarkYellow}}}{serie.Name}{Environment.NewLine}";
+                for (var i = 0; i < matchedEditions.Length; i++)
+                {
+                    message += $"{{{ConsoleColor.White}}}   {i} -> {matchedEditions[i].Title ?? "Edition Simple"}";
+                    if (nbPublishers > 1) { message += $" ({matchedEditions[i].Publisher.Title})"; }
+                    message += $" - {matchedEditions[i].VolumesCount} vol.";
+                    if (matchedEditions[i].NotFinished) { message += $" (interrompu)"; }
+                    else if ((matchedEditions[i].LastVolumeNumber > 0 && matchedEditions[i].VolumesCount == matchedEditions[i].LastVolumeNumber) || (matchedEditions[i].LastVolumeNumber == 0 && matchedEditions[i].VolumesCount == 1)) { message += $" (complet)"; }
+                    message += Environment.NewLine;
+                }
+                var userChoiceStr = Program.View.AskUserInput(message);
+                var userChoice = int.TryParse(userChoiceStr, out var _i) ? _i : matchedSeries.Length + 2;
+                if (userChoice < matchedEditions.Length)
+                {
+                    editionId = matchedEditions[userChoice].Id;
+                }
             }
 
-            RefreshSerie(serie, volume, false);
-            CacheMetadatas.Series.Add(serie);
+            if (!string.IsNullOrEmpty(editionId))
+            {
+                var edition = matchedEditions.Single(e => e.Id == editionId);
+                serie.Edition = edition.Title ?? "Edition Simple";
+                serie.Publisher = edition.Publisher.Title;
+                serie.MangaCollecEditionId = edition.Id;
+            }
+            else
+            {
+                s_IgnoredAlias.Add(alias);
+                return;
+            }
+
+            var existingSerie = CacheMetadatas.Series.SingleOrDefault(s => s.MangaCollecEditionId == serie.MangaCollecEditionId && s.MangaCollecEditionId == serie.MangaCollecEditionId);
+            if (existingSerie != null)
+            {
+                serie = existingSerie;
+                serie.Aliases.Add(alias);
+                serie.Aliases = serie.Aliases.OrderBy(_ => _).ToList();
+            }
+            else
+            {
+                serie.Aliases = new List<string> { alias };
+                CacheMetadatas.Series.Add(serie);
+            }
+
+            RefreshSerie(serie, volume, false);            
             CacheMetadatas.SaveSeries();
         }
         private void RefreshSerie(Serie serie, int volume, bool withSave)

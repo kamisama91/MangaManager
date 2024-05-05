@@ -24,7 +24,7 @@ namespace MangaManager.Tasks
         {
             lock(_series)
             {
-                File.WriteAllText(Path.Combine(_dataFolder, "ComicInfoDb.json"), JsonConvert.SerializeObject(Series.OrderBy(s => s.Alias), Formatting.Indented));
+                File.WriteAllText(Path.Combine(_dataFolder, "ComicInfoDb.json"), JsonConvert.SerializeObject(Series.OrderBy(s => s.Name), Formatting.Indented));
             }
         }
     }

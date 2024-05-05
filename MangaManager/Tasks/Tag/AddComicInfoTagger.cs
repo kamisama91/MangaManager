@@ -31,7 +31,7 @@ namespace MangaManager.Tasks.Tag
             ///TODO
             //Matching by GetOsCompliantName => what if many edition for same serie (...)
 
-            var serieInfo = CacheMetadatas.Series.SingleOrDefault(s => s.Alias == serie.ToLowerInvariant() /*||  FileHelper.GetOsCompliantName(s.Name) == serie*/);
+            var serieInfo = CacheMetadatas.Series.SingleOrDefault(s => s.Aliases.Contains(serie.ToLowerInvariant()) /*||  FileHelper.GetOsCompliantName(s.Name) == serie*/);
             if (serieInfo == null)
             {
                 Program.View.Error($"Missing metadata: {Path.GetFileName(file)}");

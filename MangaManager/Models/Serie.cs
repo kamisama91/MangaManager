@@ -7,8 +7,8 @@ namespace MangaManager.Models
 {
     public class Serie
     {
-        [JsonProperty("Alias")]
-        public string Alias { get; set; }
+        [JsonProperty("Aliases")]
+        public List<string> Aliases { get; set; }
 
         [JsonProperty("Name")]
         public string Name { get; set; }
