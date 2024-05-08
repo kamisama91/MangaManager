@@ -68,8 +68,9 @@ namespace MangaManager.Tasks.Archive
             var archiveFilePath = Path.Combine(archiveFolderPath, $"{fileName}.cbz");
             if (archiveFilePath != file && (File.Exists(archiveRegularFilePath) || File.Exists(archiveTaggedFilePath)))
             {
-                archiveFilePath = FileHelper.GetAvailableFilename(Path.Combine(Program.Options.QuarantineFolder, $"{fileName}.cbz"));
-                Program.View.Error($"{Path.GetFileName(archiveFilePath)} already in library, put in quarantine");
+                archiveFilePath = Path.Combine(Program.Options.QuarantineFolder, $"{fileName}.cbz");
+                if (archiveFilePath != file) { archiveFilePath = FileHelper.GetAvailableFilename(Path.Combine(Program.Options.QuarantineFolder, $"{fileName}.cbz")); }
+                //Program.View.Error($"{Path.GetFileName(archiveFilePath)} already in library, put in quarantine");
             }
             if (!Directory.Exists(Path.GetDirectoryName(archiveFilePath))) { Directory.CreateDirectory(Path.GetDirectoryName(archiveFilePath)); }
             FileHelper.Move(file, archiveFilePath);
