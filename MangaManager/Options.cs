@@ -19,6 +19,9 @@ namespace MangaManager
         [Option('s', "scrap", Required = false, HelpText = "scrap")]
         public bool Scrap { get; set; }
 
+        [Option('g', "ignore", Required = false, HelpText = "scrap auto ignore")]
+        public bool ScrapAutoIgnore { get; set; }
+
         [Option('t', "tag", Required = false, HelpText = "tag")]
         public bool Tag { get; set; }
 

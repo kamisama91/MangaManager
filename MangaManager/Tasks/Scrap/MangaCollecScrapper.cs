@@ -67,6 +67,13 @@ namespace MangaManager.Tasks.Scrap
             }
             else
             {
+                if (Program.Options.ScrapAutoIgnore)
+                {
+                    Program.View.Warning($"Automatically ignored alias from scrapping: {alias}");
+                    s_IgnoredAlias.Add(alias);
+                    return;
+                }
+
                 var message = $"{{{ConsoleColor.White}}}Serie: {{{ConsoleColor.DarkYellow}}}{alias}{Environment.NewLine}";
                 for (var i = 0; i < matchedSeries.Length; i++) { message += $"{{{ConsoleColor.White}}}   {i} -> {matchedSeries[i].Title}{Environment.NewLine}"; }
                 message += $"{{{ConsoleColor.DarkGray}}}   {matchedSeries.Length} -> MangaCollec ID{Environment.NewLine}";
@@ -109,6 +116,13 @@ namespace MangaManager.Tasks.Scrap
             }
             else
             {
+                if (Program.Options.ScrapAutoIgnore)
+                {
+                    Program.View.Warning($"Automatically ignored alias from scrapping: {alias}");
+                    s_IgnoredAlias.Add(alias);
+                    return;
+                }
+
                 var nbPublishers = matchedEditions.Select(e => e.Publisher.Title).Distinct().Count();
                 var message = $"{{{ConsoleColor.White}}}Edition: {{{ConsoleColor.DarkYellow}}}{serie.Name}{Environment.NewLine}";
                 for (var i = 0; i < matchedEditions.Length; i++)
