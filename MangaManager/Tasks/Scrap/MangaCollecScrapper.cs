@@ -1,5 +1,6 @@
 ﻿using MangaManager.Models;
 using MangaManager.Models.ExternalModels.MangaCollec;
+using MangaManager.Tasks.HttpClient;
 using MangaManager.Tasks.Rename;
 using System;
 using System.Collections.Concurrent;
@@ -12,7 +13,14 @@ namespace MangaManager.Tasks.Scrap
 {
     public class MangaCollecScrapper : IWorkItemProcessor
     {
-        private ConcurrentBag<string> s_IgnoredAlias = new ConcurrentBag<string>();
+        private static ConcurrentBag<string> s_IgnoredAlias = new ConcurrentBag<string>();
+
+        private MangaCollecHttpClient _httpClient;
+
+        public MangaCollecScrapper()
+        {
+            _httpClient = new MangaCollecHttpClient();
+        }
 
         public bool Accept(WorkItem workItem)
         {
@@ -50,12 +58,12 @@ namespace MangaManager.Tasks.Scrap
 
             var serie = new Serie();
 
-            var acceptedTypes = MangaCollecHttpClients.Api.GetDataStore<MangaCollecType[]>("/v1/types")
+            var acceptedTypes = _httpClient.GetDataStore<MangaCollecType[]>("/v1/types")
                         .Where(t => !t.ToDisplay)
                         .Where(t => t.Title.ToLowerInvariant() != "roman")
                         .ToArray();
 
-            var matchedSeries = MangaCollecHttpClients.Api.GetDataStore<MangaCollecSerie[]>("/v1/series")
+            var matchedSeries = _httpClient.GetDataStore<MangaCollecSerie[]>("/v1/series")
                         .Where(s => FormatName(s.Title) == FormatName(alias))
                         .Where(s => acceptedTypes.Any(t => t.Id == s.TypeId))
                         .ToArray();
@@ -98,7 +106,7 @@ namespace MangaManager.Tasks.Scrap
                 }
             }
 
-            var serieDetails = MangaCollecHttpClients.Api.GetDataStore<MangaCollecSerieDetail>($"/v1/series/{serieId}");
+            var serieDetails = _httpClient.GetDataStore<MangaCollecSerieDetail>($"/v1/series/{serieId}");
             serie.Name = serieDetails.Title;
             serie.Writer = serieDetails.Tasks.Where(t => Regex.IsMatch(t.Job.Title.ToLowerInvariant(), "sc.nario|auteur")).Select(t => $"{t.Author.Name.Trim()} {t.Author.FirstName.Trim()}").FirstOrDefault();
             serie.Penciler = serieDetails.Tasks.Where(t => Regex.IsMatch(t.Job.Title.ToLowerInvariant(), "dessin|auteur")).Select(t => $"{t.Author.Name.Trim()} {t.Author.FirstName.Trim()}").FirstOrDefault();
@@ -186,10 +194,10 @@ namespace MangaManager.Tasks.Scrap
                 return;
             }
 
-            var edition = MangaCollecHttpClients.Api.GetDataStore<MangaCollecEdition>($"/v1/editions/{serie.MangaCollecEditionId}");
+            var edition = _httpClient.GetDataStore<MangaCollecEdition>($"/v1/editions/{serie.MangaCollecEditionId}");
             var volumes = edition.Volumes
                     .Where(v => v.ReleaseDate.HasValue && v.ReleaseDate <= DateTime.Today)
-                    .Select(v => MangaCollecHttpClients.Api.GetDataStore<MangaCollecVolumeDetail>($"/v1/volumes/{v.Id}"))
+                    .Select(v => _httpClient.GetDataStore<MangaCollecVolumeDetail>($"/v1/volumes/{v.Id}"))
                     .Select(v => new Volume()
                     {
                         Number = v.Number,

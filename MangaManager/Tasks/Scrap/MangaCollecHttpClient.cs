@@ -6,23 +6,8 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 
-namespace MangaManager.Tasks.Scrap
+namespace MangaManager.Tasks.HttpClient
 {
-    public class MangaCollecHttpClients
-    {
-        private static readonly Lazy<MangaCollecHttpClient> s_apiClient = new Lazy<MangaCollecHttpClient>(new MangaCollecHttpClient());
-        public static MangaCollecHttpClient Api => s_apiClient.Value;
-
-        private static MangaCollecHttpClient CreateUserClient()
-        {
-            var client = new MangaCollecHttpClient();
-            client.Login();
-            return client;
-        }
-        private static readonly Lazy<MangaCollecHttpClient> s_userClient = new Lazy<MangaCollecHttpClient>(CreateUserClient());
-        public static MangaCollecHttpClient User => s_userClient.Value;
-    }
-
     public class MangaCollecHttpClient
     {
         private static string s_clientId = "";
@@ -30,7 +15,8 @@ namespace MangaManager.Tasks.Scrap
         private static string s_userLogin = "";
         private static string s_userPassword = "";
 
-        private readonly HttpClient _httpClient = new();
+
+        private readonly System.Net.Http.HttpClient _httpClient = new() { Timeout = TimeSpan.FromMinutes(1) };
         private HttpToken _token;
         private readonly Dictionary<string, object> _dataStoreCache = new();
 
