@@ -188,7 +188,7 @@ namespace MangaManager
                 catch (Exception ex)
                 {
                     ProgressGui(workItem.InstanceId, CacheWorkItems.InstancesCount, $"{{DarkRed}}FAIL:   {{Default}}{workingFilePath}");
-                    View.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}");
+                    View.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}");
                 }
             }
         }
