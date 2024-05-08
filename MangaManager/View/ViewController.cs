@@ -131,7 +131,7 @@ namespace MangaManager.View
 
         public void Info(string message)
         {
-            Log(message, ConsoleColor.DarkBlue);
+            Log(message, ConsoleColor.Blue);
         }
         public void Warning(string message)
         {

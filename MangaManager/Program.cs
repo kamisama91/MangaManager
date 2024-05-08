@@ -175,7 +175,7 @@ namespace MangaManager
                 var workingFilePath = workItem.FilePath.Replace(Options.SourceFolder, string.Empty).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                 try
                 {
-                    ProgressGui(workItem.InstanceId, CacheWorkItems.InstancesCount, $"{{DarkBlue}}DOING:  {{Default}}{workingFilePath}");
+                    ProgressGui(workItem.InstanceId, CacheWorkItems.InstancesCount, $"{{Blue}}DOING:  {{Default}}{workingFilePath}");
 
                     var startTime = DateTime.Now;
                     Processors.Where(processor => processor.Accept(workItem))
