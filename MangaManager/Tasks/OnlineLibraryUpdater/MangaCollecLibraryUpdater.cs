@@ -27,7 +27,7 @@ namespace MangaManager.Tasks.OnlineLibraryUpdater
             InitializePossessions();
                         
             var comicInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath).ComicInfo;
-            var serie = CacheMetadatas.Series.SingleOrDefault(s => s.Name == System.Net.WebUtility.HtmlDecode(comicInfo.Series) && s.Publisher == comicInfo.Publisher && s.Edition == comicInfo.Imprint);
+            var serie = CacheMetadatas.Series.SingleOrDefault(s => s.Name == comicInfo.Series && s.Publisher == comicInfo.Publisher && s.Edition == comicInfo.Imprint);
             var volume = serie?.Volumes.SingleOrDefault(v => v.Number.ToString() == ((serie.LastVolume == 0 && comicInfo.Number == "1") ? "0" : comicInfo.Number));
             var volumeId = volume?.MangaCollecVolumeId;
 

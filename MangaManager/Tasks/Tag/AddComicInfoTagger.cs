@@ -66,10 +66,10 @@ namespace MangaManager.Tasks.Tag
 
             var comicInfo = new ComicInfo
             {
-                Series = HtmlEncoder.Default.Encode(serieInfo.Name ?? string.Empty),
-                Title = HtmlEncoder.Default.Encode(title ?? string.Empty),
+                Series = serieInfo.Name ?? string.Empty,
+                Title = title ?? string.Empty,
                 Number = volume.ToString(),
-                SeriesGroup = HtmlEncoder.Default.Encode(serieGroup ?? string.Empty),
+                SeriesGroup = serieGroup ?? string.Empty,
                 Imprint = serieInfo.Edition ?? string.Empty,
                 Count = lastVolume.ToString(),
                 Writer = serieInfo.Writer ?? string.Empty,
@@ -86,7 +86,7 @@ namespace MangaManager.Tasks.Tag
 
             if (volumeInfo != null)
             {
-                comicInfo.Summary = HtmlEncoder.Default.Encode(volumeInfo.Summary ?? string.Empty);
+                comicInfo.Summary = volumeInfo.Summary ?? string.Empty;
                 comicInfo.Year = volumeInfo.ReleaseDate.Year.ToString();
                 comicInfo.Month = volumeInfo.ReleaseDate.Month.ToString();
                 comicInfo.Day = volumeInfo.ReleaseDate.Day.ToString();

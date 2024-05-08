@@ -33,7 +33,6 @@ namespace MangaManager.Tasks.Archive
             if (!string.IsNullOrEmpty(authors)) { name += $" ({authors})"; }
             if (!string.IsNullOrEmpty(publisher)) { name += $" ({publisher}{edition})"; }
 
-            name = System.Net.WebUtility.HtmlDecode(name);
             name = FileHelper.GetOsCompliantName(name);
 
             return name;
