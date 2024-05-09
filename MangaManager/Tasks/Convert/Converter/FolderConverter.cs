@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Scripting.Utils;
 using MangaManager.Models;
+using System.Text.RegularExpressions;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
@@ -35,7 +36,7 @@ namespace MangaManager.Tasks.Convert.Converter
         {
             return Directory
                 .EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)
-                .OrderBy(file => int.TryParse(Path.GetFileNameWithoutExtension(file), out var pageNumber) ? pageNumber : 0)
+                .OrderBy(file => int.TryParse(Regex.Replace(Path.GetFileNameWithoutExtension(file), @"^.*?(\d+)$", "$1"), out var pageNumber) ? pageNumber : 0)
                 .ThenBy(file => file)
                 .Select(file =>
                 {
