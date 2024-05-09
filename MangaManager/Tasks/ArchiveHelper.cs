@@ -19,14 +19,30 @@ namespace MangaManager.Tasks
             using (var archive = ArchiveFactory.Open(archiveFile))
             {
                 archiveInfo.IsZip = (archive.Type == ArchiveType.Zip);
-                archiveInfo.HasSubdirectories = archive.Entries.Any(e => e.IsDirectory);
-
-                var entry = archive.Entries.SingleOrDefault(e => !e.IsDirectory && e.Key.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase));
-                if (entry != null)
+                foreach (var entry in archive.Entries)
                 {
-                    using var entryMemoryStream = new MemoryStream();
-                    entry.OpenEntryStream().CopyTo(entryMemoryStream);
-                    archiveInfo.ComicInfo = ComicInfo.FromXmlStream(entryMemoryStream);
+                    if (entry.IsDirectory)
+                    {
+                        archiveInfo.HasSubdirectories = true;
+                    }
+                    else
+                    {
+                        if (!archiveInfo.HasSubdirectories && !Path.GetFileName(entry.Key).Equals(entry.Key))
+                        {
+                            archiveInfo.HasSubdirectories = true;
+                        }
+
+                        if (Path.GetFileName(entry.Key).Equals("calibreHtmlOutBasicCss.css", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            archiveInfo.IsCalibreArchive = true;
+                        }
+                        else if (Path.GetFileName(entry.Key).Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            using var entryMemoryStream = new MemoryStream();
+                            entry.OpenEntryStream().CopyTo(entryMemoryStream);
+                            archiveInfo.ComicInfo = ComicInfo.FromXmlStream(entryMemoryStream);
+                        }
+                    }
                 }
             }
             return archiveInfo;
@@ -70,6 +86,7 @@ namespace MangaManager.Tasks
 
             var archiveInfo = CacheArchiveInfos.GetOrCreate(outputFile);
             archiveInfo.IsZip = true;
+            archiveInfo.IsCalibreArchive = false;
             archiveInfo.HasSubdirectories = false;
             archiveInfo.ComicInfo = comicInfo;
 
@@ -131,7 +148,8 @@ namespace MangaManager.Tasks
             }
 
             var archiveInfo = CacheArchiveInfos.GetOrCreate(sourceFile);
-            archiveInfo.HasSubdirectories = false;
+            archiveInfo.IsCalibreArchive = false; 
+            archiveInfo.HasSubdirectories = false;            
             archiveInfo.ComicInfo = comicInfo;
 
             CacheWorkItems.Get(sourceFile)?.RestoreLastWriteTime();

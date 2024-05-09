@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using MangaManager.Models;
 using SharpCompress.Archives;
 
@@ -34,11 +35,10 @@ namespace MangaManager.Tasks.Convert.Converter
         {
             var archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
 
-            if (!archiveInfo.IsZip)
+            if (!archiveInfo.IsZip || archiveInfo.IsCalibreArchive)
             {
                 ConvertToCbz(workItem);
             }
-
             else if (archiveInfo.HasSubdirectories)
             {
                 FlattenCbz(workItem);
@@ -84,6 +84,73 @@ namespace MangaManager.Tasks.Convert.Converter
                 }
             }
         }
+        private IEnumerable<ArchiveItemStream> GetCalibreArchiveItemStream(string file)
+        {
+            var assemblyDir = Path.GetDirectoryName(GetType().Assembly.Location);
+
+            var htmlExtensions = new[] { ".htm", ".html", ".xhtml" };
+            var prevPageRegex = new Regex("<a (?:href|xlink:href)=[\"']([^\\\"']*)[\"'].*?class=[\"']calibreAPrev[\"']>");
+            var nextPageRegex = new Regex("<a (?:href|xlink:href)=[\"']([^\\\"']*)[\"'].*?class=[\"']calibreANext[\"']>");
+            var imageRegex = new Regex("<(?:img|image).*?(?:src|href|xlink:src|xlink:href)=[\"']([^\\\"']*)[\"']");
+
+            using var archive = ArchiveFactory.Open(file);
+            var htmlEntries = archive.Entries
+                    .Where(e => htmlExtensions.Contains(Path.GetExtension(e.Key)))
+                    .Select(e =>
+                    {
+                        //Extract content of html pages
+                        using var es = e.OpenEntryStream();
+                        using var ms = new MemoryStream();
+                        es.CopyTo(ms);
+                        var buffer = new byte[ms.Length];
+                        ms.Position = 0;
+                        ms.Read(buffer, 0, buffer.Length);
+                        var content = new string(buffer.Select(b => (char)b).ToArray());
+
+                        var prevPageResult = prevPageRegex.Match(content);
+                        var prevPage = prevPageResult.Success
+                            ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(e.Key), prevPageResult.Groups[1].Value)).Replace(assemblyDir, string.Empty).Replace(Path.DirectorySeparatorChar, '/').TrimStart('/')
+                            : string.Empty;
+
+                        var nextPageResult = nextPageRegex.Match(content);
+                        var nextPage = nextPageResult.Success
+                            ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(e.Key), nextPageResult.Groups[1].Value)).Replace(assemblyDir, string.Empty).Replace(Path.DirectorySeparatorChar, '/').TrimStart('/')
+                            : string.Empty;
+
+                        var imageResult = imageRegex.Match(content);
+                        var image = imageResult.Success
+                            ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(e.Key), imageResult.Groups[1].Value)).Replace(assemblyDir, string.Empty).Replace(Path.DirectorySeparatorChar, '/').TrimStart('/')
+                            : string.Empty;
+
+                        return new
+                        {
+                            page = e.Key,
+                            prevPage = prevPage,
+                            nextPage = nextPage,
+                            image = image,
+                        };
+                    })
+                    .ToDictionary(a => a.page, a => a);
+
+            var item = htmlEntries.Values.FirstOrDefault(v => string.IsNullOrEmpty(v.prevPage));
+            while (item != null)
+            {
+                if ( !string.IsNullOrEmpty(item.image))
+                {
+                    var e = archive.Entries.Single(e => e.Key.Equals(item.image));
+                    using var es = e.OpenEntryStream();
+                    using var ms = new MemoryStream();
+                    es.CopyTo(ms);
+                    ms.Position = 0;
+                    if (ms.TryGetImageExtension(out var extension))
+                    {
+                        yield return new ArchiveItemStream { Stream = ms, Extension = extension };
+                    }
+                }
+                item = htmlEntries.ContainsKey(item.nextPage) ? htmlEntries[item.nextPage] : null;
+            }
+        }
+
         private void ConvertToCbz(WorkItem workItem)
         {
             var file = workItem.FilePath;
@@ -93,12 +160,16 @@ namespace MangaManager.Tasks.Convert.Converter
             if (!file.Equals(finalPath, StringComparison.InvariantCultureIgnoreCase)) { finalPath = FileHelper.GetAvailableFilename(finalPath); }
             var workingPath = finalPath.Replace($".cbz", ".cbz.tmp");
 
-            var isSuccess = ArchiveHelper.CreateZipFromArchiveItemStreams(file, workingPath, GetArchiveItemStream);
+            Func<string, IEnumerable<ArchiveItemStream>> getArchiveItemStreamMethod = CacheArchiveInfos.GetOrCreate(workItem.FilePath).IsCalibreArchive 
+                ? GetCalibreArchiveItemStream
+                : GetArchiveItemStream;
+            var isSuccess = ArchiveHelper.CreateZipFromArchiveItemStreams(file, workingPath, getArchiveItemStreamMethod);
             if (isSuccess)
             {
+                CacheArchiveInfos.RemoveItem(file);
+                CacheWorkItems.Get(file)?.UpdatePath(workingPath);
                 File.Delete(file);
                 FileHelper.Move(workingPath, finalPath);
-                workItem.UpdatePath(finalPath);
             }
         }
 

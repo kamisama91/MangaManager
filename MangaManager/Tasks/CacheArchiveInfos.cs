@@ -9,7 +9,8 @@ namespace MangaManager.Tasks
     public class ArchiveInfo
     {
         public bool IsZip { get; set; }
-        public bool HasSubdirectories { get; set; }
+        public bool IsCalibreArchive { get; set; }
+        public bool HasSubdirectories { get; set; }        
         public bool HasComicInfo => ComicInfo != null;
         public ComicInfo ComicInfo { get; set; }
 
@@ -57,6 +58,15 @@ namespace MangaManager.Tasks
             }
             s_ArchiveInfoCache[newPath] = s_ArchiveInfoCache[oldPath];
             s_ArchiveInfoCache.Remove(oldPath, out var _);
+        }
+
+        public static void RemoveItem(string path)
+        {
+            if (!s_ArchiveInfoCache.ContainsKey(path))
+            {
+                return;
+            }
+            s_ArchiveInfoCache.Remove(path, out var _);
         }
     }
 }
