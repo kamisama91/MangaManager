@@ -175,7 +175,7 @@ namespace MangaManager.Tasks.Convert.Converter
             var item = htmlEntries.Values.FirstOrDefault(v => string.IsNullOrEmpty(v.prevPage));
             while (item != null)
             {
-                if ( !string.IsNullOrEmpty(item.image))
+                if (!string.IsNullOrEmpty(item.image))
                 {
                     var e = archive.Entries.Single(e => e.Key.Equals(item.image));
                     using var es = e.OpenEntryStream();
