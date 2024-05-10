@@ -126,7 +126,7 @@ namespace MangaManager.Tasks.Convert.Converter
         }
         private IEnumerable<ArchiveItemStream> GetCalibreArchiveItemStream(string file)
         {
-            var assemblyDir = Path.GetDirectoryName(GetType().Assembly.Location);
+            var workingDir = Directory.GetCurrentDirectory();
 
             var htmlExtensions = new[] { ".htm", ".html", ".xhtml" };
             var prevPageRegex = new Regex("<a (?:href|xlink:href)=[\"']([^\\\"']*)[\"'].*?class=[\"']calibreAPrev[\"']>");
@@ -149,17 +149,17 @@ namespace MangaManager.Tasks.Convert.Converter
 
                         var prevPageResult = prevPageRegex.Match(content);
                         var prevPage = prevPageResult.Success
-                            ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(e.Key), prevPageResult.Groups[1].Value)).Replace(assemblyDir, string.Empty).Replace(Path.DirectorySeparatorChar, '/').TrimStart('/')
+                            ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(e.Key), prevPageResult.Groups[1].Value)).Replace(workingDir, string.Empty).Replace(Path.DirectorySeparatorChar, '/').TrimStart('/')
                             : string.Empty;
 
                         var nextPageResult = nextPageRegex.Match(content);
                         var nextPage = nextPageResult.Success
-                            ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(e.Key), nextPageResult.Groups[1].Value)).Replace(assemblyDir, string.Empty).Replace(Path.DirectorySeparatorChar, '/').TrimStart('/')
+                            ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(e.Key), nextPageResult.Groups[1].Value)).Replace(workingDir, string.Empty).Replace(Path.DirectorySeparatorChar, '/').TrimStart('/')
                             : string.Empty;
 
                         var imageResult = imageRegex.Match(content);
                         var image = imageResult.Success
-                            ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(e.Key), imageResult.Groups[1].Value)).Replace(assemblyDir, string.Empty).Replace(Path.DirectorySeparatorChar, '/').TrimStart('/')
+                            ? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(e.Key), imageResult.Groups[1].Value)).Replace(workingDir, string.Empty).Replace(Path.DirectorySeparatorChar, '/').TrimStart('/')
                             : string.Empty;
 
                         return new
