@@ -5,12 +5,13 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using MangaManager.Models;
 using SharpCompress.Archives;
+using SharpCompress.Common;
 
 namespace MangaManager.Tasks.Convert.Converter
 {
     public class ArchiveConverter : IWorkItemProvider, IWorkItemProcessor
     {
-        private List<string> _acceptdExtensions = new List<string> { ".c7z", ".7z", ".cbr", ".rar", ".cbz", ".zip", };
+        private List<string> _acceptdExtensions = new List<string> { ".cb7", ".7z", ".cbr", ".rar", ".cbt", ".tar", ".cbz", ".zip", };
 
         public IEnumerable<WorkItem> GetItems()
         {
@@ -52,34 +53,73 @@ namespace MangaManager.Tasks.Convert.Converter
 
         private IEnumerable<ArchiveItemStream> GetArchiveItemStream(string file)
         {
-            using (var archiveReader = ArchiveFactory.Open(file).ExtractAllEntries())
+            var BuildArchiveItemStream = (string key, MemoryStream ms) =>
             {
-                while (archiveReader.MoveToNextEntry())
+                if (ms.TryGetImageExtension(out var extension))
                 {
-                    if (!archiveReader.Entry.IsDirectory)
+                    return new ArchiveItemStream { Stream = ms, Extension = extension };
+                }
+                else if (Path.GetFileName(key).Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    //Preserve CommicInfo.xml
+                    return new ArchiveItemStream { Stream = ms, FileName = ComicInfo.NAME };
+                }
+                else if (Path.GetFileName(key).Equals("thumbs.db", StringComparison.InvariantCultureIgnoreCase)
+                      || Path.GetFileName(key).Equals("desktop.ini", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    //ignore those windows files...
+                    return null;
+                }
+                else
+                {
+                    throw new FormatException();
+                }
+            };
+
+            using var archive = ArchiveFactory.Open(file);
+
+            var sortedEntries = archive.Entries.Where(e => !e.IsDirectory)
+                .OrderBy(e => int.TryParse(Regex.Replace(Path.GetDirectoryName(e.Key), @"^.*?(\d+)$", "$1"), out var folderNum) ? folderNum : 0)
+                .ThenBy(e => Path.GetDirectoryName(e.Key))
+                .ThenBy(e => int.TryParse(Regex.Replace(Path.GetFileNameWithoutExtension(e.Key), @"^.*?(\d+)$", "$1"), out var fileNum) ? fileNum : 0)
+                .ThenBy(e => Path.GetFileNameWithoutExtension(e.Key))
+                .Select(e => new { Entry = e, DecompressedStream = new MemoryStream() })
+                .ToList();
+
+            if (archive.Type == ArchiveType.SevenZip)
+            {
+                //Cannot iterates over all sortedEntries to call OpenEntryStream: it is very slow for 7z archive
+                //As a consequence we will store all extracted content in memory...
+                using (var archiveReader = ArchiveFactory.Open(file).ExtractAllEntries())
+                {
+                    while (archiveReader.MoveToNextEntry())
                     {
-                        using var entryStream = archiveReader.OpenEntryStream();
-                        using var entryMemoryStream = new MemoryStream();
-                        entryStream.CopyTo(entryMemoryStream);
-                        if (entryMemoryStream.TryGetImageExtension(out var extension))
+                        var sortedEntry = sortedEntries.SingleOrDefault(e => e.Entry.Key.Equals(archiveReader.Entry.Key));
+                        if (sortedEntry != null)
                         {
-                            yield return new ArchiveItemStream { Stream = entryMemoryStream, Extension = extension };
+                            using var entryStream = archiveReader.OpenEntryStream();
+                            entryStream.CopyTo(sortedEntry.DecompressedStream);
                         }
-                        else if (Path.GetFileName(archiveReader.Entry.Key).Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            //Preserve CommicInfo.xml
-                            yield return new ArchiveItemStream { Stream = entryMemoryStream, FileName = ComicInfo.NAME };
-                        }
-                        else if (Path.GetFileName(archiveReader.Entry.Key).Equals("thumbs.db", StringComparison.InvariantCultureIgnoreCase)
-                              || Path.GetFileName(archiveReader.Entry.Key).Equals("desktop.ini", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            //ignore those windows files...
-                            continue;
-                        }
-                        else
-                        {
-                            throw new FormatException();
-                        }
+                    }
+                }
+                foreach (var archiveItem in sortedEntries)
+                {
+                    if (BuildArchiveItemStream(archiveItem.Entry.Key, archiveItem.DecompressedStream) is ArchiveItemStream archiveItemStream)
+                    {
+                        yield return archiveItemStream;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var archiveItem in sortedEntries)
+                {
+                    using var entryStream = archiveItem.Entry.OpenEntryStream();
+                    var entryMemoryStream = new MemoryStream();
+                    entryStream.CopyTo(entryMemoryStream);
+                    if (BuildArchiveItemStream(archiveItem.Entry.Key, entryMemoryStream) is ArchiveItemStream archiveItemStream)
+                    {
+                        yield return archiveItemStream;
                     }
                 }
             }
