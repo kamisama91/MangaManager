@@ -1,7 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using MangaManager.Models;
 using MangaManager.Tasks.Rename;
 
 namespace MangaManager.Tasks.Archive
@@ -10,7 +8,7 @@ namespace MangaManager.Tasks.Archive
     {
         public bool Accept(WorkItem workItem)
         {
-            if (!Program.Options.Archive)
+            if (!Program.Options.Archive || string.IsNullOrEmpty(Program.Options.ArchiveFolder) || string.IsNullOrEmpty(Program.Options.QuarantineFolder))
             {
                 return false;
             }
@@ -19,48 +17,19 @@ namespace MangaManager.Tasks.Archive
             return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && archiveInfo.HasComicInfo;
         }
 
-        private string BuildSerieNameFromComicInfo(ComicInfo info)
-        {
-            ///TODO
-            //Intermediate Folders
-
-            var serie = info.Series;
-            var authors = string.Join(" - ", new[] { info.Writer, info.Penciller }.Where(p => !string.IsNullOrEmpty(p)).Select(p => p.Split(' ').First()).Distinct());
-            var publisher = info.Publisher;
-            var edition = !string.IsNullOrEmpty(info.Imprint) && info.Imprint != "Edition Simple" ? $" - {info.Imprint}" : string.Empty;
-
-            var name = serie;
-            if (!string.IsNullOrEmpty(authors)) { name += $" ({authors})"; }
-            if (!string.IsNullOrEmpty(publisher)) { name += $" ({publisher}{edition})"; }
-
-            name = FileHelper.GetOsCompliantName(name);
-
-            return name;
-        }
-
-        private string BuildVolumeNameFromComicInfo(ComicInfo info)
-        {
-            var volume = int.Parse(info.Number);
-            var lastVolume = !string.IsNullOrEmpty(info.Count) ? int.Parse(info.Count) : 0;
-            var length = lastVolume > 0
-                ? 1 + (int)Math.Floor(Math.Log10(lastVolume))
-                : 2;
-            return BuildSerieNameFromComicInfo(info) + $" T{volume.ToString("N0").PadLeft(length, '0')}";
-        }
-
         public void Process(WorkItem workItem)
         {
             var file = workItem.FilePath;
             var comicInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath).ComicInfo;
 
             //Guess Library Folder name
-            var folderName = BuildSerieNameFromComicInfo(comicInfo);
+            var folderName = comicInfo.BuildSerieNameFromComicInfo();
             var archiveFolderPath = Path.Combine(Program.Options.ArchiveFolder, folderName);
             var archiveCompleteFolderPath = $"{archiveFolderPath} (complet)";
             if (Directory.Exists(archiveCompleteFolderPath)) { archiveFolderPath = archiveCompleteFolderPath; }
 
             //Guess Library File name and move into Library/Quarantine folder
-            var regularFileName = BuildVolumeNameFromComicInfo(comicInfo);
+            var regularFileName = comicInfo.BuildVolumeNameFromComicInfo();
             var taggedFileName = $"{regularFileName} (tag)";
             var fileName = FileNameParser.Parse(file).IsTagged ? taggedFileName : regularFileName;
             var archiveRegularFilePath = Path.Combine(archiveFolderPath, $"{regularFileName}.cbz");
@@ -70,7 +39,6 @@ namespace MangaManager.Tasks.Archive
             {
                 archiveFilePath = Path.Combine(Program.Options.QuarantineFolder, $"{fileName}.cbz");
                 if (archiveFilePath != file) { archiveFilePath = FileHelper.GetAvailableFilename(Path.Combine(Program.Options.QuarantineFolder, $"{fileName}.cbz")); }
-                //Program.View.Error($"{Path.GetFileName(archiveFilePath)} already in library, put in quarantine");
             }
             if (!Directory.Exists(Path.GetDirectoryName(archiveFilePath))) { Directory.CreateDirectory(Path.GetDirectoryName(archiveFilePath)); }
             FileHelper.Move(file, archiveFilePath);

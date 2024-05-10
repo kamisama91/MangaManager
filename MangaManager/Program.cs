@@ -57,6 +57,7 @@ namespace MangaManager
                     new() { Processors = WorkItemProcessors.Taggers, ProgressGui = View.TaggingProgress, DegreeOfParallelism = 2 },
                     new() { Processors = WorkItemProcessors.OnlineLibraryUpdaters, ProgressGui = View.OnlineUpdatingProgress },
                     new() { Processors = WorkItemProcessors.Archivers, ProgressGui = View.ArchivingingProgress },
+                    new() { Processors = WorkItemProcessors.Checkers, ProgressGui = null },
                 };
 
                 var startTime = DateTime.Now;

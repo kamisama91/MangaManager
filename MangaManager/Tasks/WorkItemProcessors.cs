@@ -52,6 +52,11 @@ namespace MangaManager.Tasks
         {
             new ToLibraryFolderMover()
         };
+
+        public static IWorkItemProcessor[] Checkers = new IWorkItemProcessor[]
+        {
+            new MangaCollecLibraryChecker()
+        };
     }
 
     public interface IWorkItemProvider

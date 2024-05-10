@@ -28,69 +28,19 @@ namespace MangaManager.Tasks.Tag
             var serie = parsedFileName.Serie;
             var volume = parsedFileName.Volume;
 
-            ///TODO
-            //Matching by GetOsCompliantName => what if many edition for same serie (...)
-
-            var serieInfo = CacheMetadatas.Series.SingleOrDefault(s => s.Aliases.Contains(serie.ToLowerInvariant()) /*||  FileHelper.GetOsCompliantName(s.Name) == serie*/);
+            var serieInfo = CacheMetadatas.Series.SingleOrDefault(s => s.Aliases.Contains(serie.ToLowerInvariant()));
             if (serieInfo == null)
             {
                 Program.View.Error($"Missing metadata: {Path.GetFileName(file)}");
                 return;
             }
 
-            var volumeInfo = serieInfo.Volumes?.SingleOrDefault(v => v.Number == volume);
-            var lastVolume = serieInfo.LastVolume.HasValue ? serieInfo.LastVolume : -1;
-            var title = !string.IsNullOrEmpty(volumeInfo?.Name) ? $"{serieInfo.Name} - {volumeInfo.Name}" : $"{serieInfo.Name} - Tome {volume}";
-            if (serieInfo.LastVolume == 0 && volume == 1)
-            {
-                //One-Shot serie
-                volumeInfo = serieInfo?.Volumes?.SingleOrDefault(v => v.Number == 0);
-                lastVolume = 1;
-                title = serieInfo.Name;
-            }
+            var volumeInfo = serieInfo.LastVolume == 0 && volume == 1
+                ? serieInfo.Volumes?.SingleOrDefault(v => v.Number == 0)       //One-Shot serie
+                : serieInfo.Volumes?.SingleOrDefault(v => v.Number == volume);
+            volumeInfo ??= new Volume { Number = volume };
 
-            var keywords = serieInfo?.Keywords.SelectMany(keyword => CacheMetadatas.Keywords.Where(k => k.Title == keyword)).ToList();
-            var genres = (keywords?.Where(k => k.Type == KeywordType.Genre).Select(k => k.Title).ToList()) ?? [];
-            var tags = (keywords?.Where(k => k.Type == KeywordType.Tag).Select(k => k.Title).ToList()) ?? [];
-
-            var ageRating = (keywords?.Select(k => k.Rating).DefaultIfEmpty(0).Max() ?? 0) switch
-            {
-                12 => "PG",
-                14 => "M",
-                16 => "MA15+",
-                18 => "R18+",
-                _ => "G",
-            };
-
-            var serieGroup = CacheMetadatas.Groups.FirstOrDefault(g => g.Title == serieInfo.Name || g.RelatedTitles.Contains(serieInfo.Name))?.Title ?? string.Empty;
-
-            var comicInfo = new ComicInfo
-            {
-                Series = serieInfo.Name ?? string.Empty,
-                Title = title ?? string.Empty,
-                Number = volume.ToString(),
-                SeriesGroup = serieGroup ?? string.Empty,
-                Imprint = serieInfo.Edition ?? string.Empty,
-                Count = lastVolume.ToString(),
-                Writer = serieInfo.Writer ?? string.Empty,
-                Penciller = serieInfo.Penciler ?? string.Empty,
-                Publisher = serieInfo.Publisher ?? string.Empty,
-                AgeRating = ageRating,
-                Genre = string.Join(',', genres),
-                Tags = string.Join(',', tags),
-                Summary = string.Empty,
-                Year = "0",
-                Month = "0",
-                Day = "0",
-            };
-
-            if (volumeInfo != null)
-            {
-                comicInfo.Summary = volumeInfo.Summary ?? string.Empty;
-                comicInfo.Year = volumeInfo.ReleaseDate.Year.ToString();
-                comicInfo.Month = volumeInfo.ReleaseDate.Month.ToString();
-                comicInfo.Day = volumeInfo.ReleaseDate.Day.ToString();
-            }
+            var comicInfo = ComicInfoHelper.BuildComicInfoFromSerieAndVolume(serieInfo, volumeInfo);
 
             ArchiveHelper.UpdateZipWithArchiveItemStreams(file, createdItems: new[] { new ArchiveItemStream { FileName = ComicInfo.NAME, Stream = comicInfo.ToXmlStream() } });
         }

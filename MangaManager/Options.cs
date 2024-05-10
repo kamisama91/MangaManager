@@ -28,7 +28,7 @@ namespace MangaManager
         [Option('f', "force", Required = false, HelpText = "force tag")]
         public bool TagForce { get; set; }
 
-        [Option('o', "online-update", Required = false, HelpText = "online update")]
+        [Option('u', "online-update", Required = false, HelpText = "online update")]
         public bool OnlineUpdate { get; set; }
 
         [Option('a', "archive", Required = false, HelpText = "archive")]
@@ -40,5 +40,7 @@ namespace MangaManager
         [Option('q', "quarantine", Required = false, HelpText = "quarantine")]
         public string QuarantineFolder { get; set; }
 
+        [Option('k', "online-check", Required = false, HelpText = "check online library consistency")]
+        public bool OnlineCheck { get; set; }
     }
 }
