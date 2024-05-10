@@ -70,7 +70,8 @@ namespace MangaManager.Tasks.Convert.Converter
         }
         private IEnumerable<ArchiveItemStream> GetArchiveItemStreamsFromAzw8(string folder)
         {
-            var opfPath = Directory.EnumerateFiles(folder, "*.opf", SearchOption.AllDirectories).Single();
+            //When many mobi version are extracted use latest one
+            var opfPath = Directory.EnumerateFiles(folder, "*.opf", SearchOption.AllDirectories).OrderBy(_ => _).Last();
             using var opfReader = new XmlTextReader(opfPath);
             opfReader.Namespaces = false;
             var opfDocument = new XmlDocument();

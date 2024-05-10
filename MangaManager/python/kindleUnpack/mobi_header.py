@@ -923,7 +923,7 @@ class MobiHeader:
     def describeHeader(self, DUMP):
         print("Mobi Version:", self.version)
         print("Codec:", self.codec)
-        print("Title:", self.title)
+        print("Title:", self.title.encode('utf-8'))
         if 'Updated_Title' in self.metadata:
             print("EXTH Title:", self.metadata['Updated_Title'][0])
         if self.compression == 0x4448:
