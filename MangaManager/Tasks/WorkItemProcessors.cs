@@ -14,44 +14,44 @@ namespace MangaManager.Tasks
     {
         public static IWorkItemProvider[] Providers => Converters.OfType<IWorkItemProvider>().ToArray();
 
-        public static IWorkItemProcessor[] Converters =
-        [
+        public static IWorkItemProcessor[] Converters = new IWorkItemProcessor[]
+        {
             new ArchiveConverter(),
             new PdfConverter(),
             new EpubConverter(),
             new AmazonConverter(),
             new FolderConverter(),
-        ];
+        };
 
-        public static IWorkItemProcessor[] Renamers =
-        [
+        public static IWorkItemProcessor[] Renamers = new IWorkItemProcessor[]
+        {
             new FromFileNameRenamer(),
-        ];
+        };
 
-        public static IWorkItemProcessor[] Movers =
-        [
+        public static IWorkItemProcessor[] Movers = new IWorkItemProcessor[]
+        {
             new ToRootFolderMover(),
-        ];
+        };
 
-        public static IWorkItemProcessor[] Scappers =
-        [
+        public static IWorkItemProcessor[] Scappers = new IWorkItemProcessor[]
+        {
             new MangaCollecScrapper(),
-        ];
+        };
 
-        public static IWorkItemProcessor[] Taggers =
-        [
+        public static IWorkItemProcessor[] Taggers = new IWorkItemProcessor[]
+        {
             new AddComicInfoTagger(),
-        ];
+        };
 
-        public static IWorkItemProcessor[] OnlineLibraryUpdaters =
-        [
+        public static IWorkItemProcessor[] OnlineLibraryUpdaters = new IWorkItemProcessor[]
+        {
             new MangaCollecLibraryUpdater(),
-        ];
+        };
 
-        public static IWorkItemProcessor[] Archivers =
-        [
+        public static IWorkItemProcessor[] Archivers = new IWorkItemProcessor[]
+        {
             new ToLibraryFolderMover()
-        ];
+        };
     }
 
     public interface IWorkItemProvider

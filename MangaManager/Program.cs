@@ -102,7 +102,7 @@ namespace MangaManager
             await Task.WhenAll(consumers.Select(c => c.ConsumeDataAsync()));
         }
 
-        private class WorkItemsProducer()
+        private class WorkItemsProducer
         {
             public IWorkItemProvider[] Providers { get; set; }
 
@@ -127,7 +127,7 @@ namespace MangaManager
                                 .ToArray();
             }
         }
-        private class WorkItemsConsumer()
+        private class WorkItemsConsumer
         {
             private long TotalMilliseconds;
             private decimal TotalSeconds => (decimal)(TotalMilliseconds / 1000);
@@ -138,7 +138,7 @@ namespace MangaManager
             public void ConsumeData(IEnumerable<WorkItem> workItems)
             {
                 workItems.ForEach(workItem => ProcessWorkItem(workItem));
-                ProgressGui(CacheWorkItems.InstancesCount, CacheWorkItems.InstancesCount, $"{Math.Floor(TotalSeconds / 60)} min {Math.Floor(TotalSeconds % 60)} sec");
+                ProgressGui?.Invoke(CacheWorkItems.InstancesCount, CacheWorkItems.InstancesCount, $"{Math.Floor(TotalSeconds / 60)} min {Math.Floor(TotalSeconds % 60)} sec");
             }
 
             public ChannelReader<WorkItem> WorkItemsReader { get; set; }
@@ -167,7 +167,7 @@ namespace MangaManager
                 await Task.WhenAll(parallelTasks);
                 if (WorkItemsWriter != null) WorkItemsWriter.Complete();
 
-                ProgressGui(CacheWorkItems.InstancesCount, CacheWorkItems.InstancesCount, $"{Math.Floor(TotalSeconds / 60)} min {Math.Floor(TotalSeconds % 60)} sec");
+                ProgressGui?.Invoke(CacheWorkItems.InstancesCount, CacheWorkItems.InstancesCount, $"{Math.Floor(TotalSeconds / 60)} min {Math.Floor(TotalSeconds % 60)} sec");
             }
 
             private void ProcessWorkItem(WorkItem workItem)
@@ -175,7 +175,7 @@ namespace MangaManager
                 var workingFilePath = workItem.FilePath.Replace(Options.SourceFolder, string.Empty).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                 try
                 {
-                    ProgressGui(workItem.InstanceId, CacheWorkItems.InstancesCount, $"{{Blue}}DOING:  {{Default}}{workingFilePath}");
+                    ProgressGui?.Invoke(workItem.InstanceId, CacheWorkItems.InstancesCount, $"{{Blue}}DOING:  {{Default}}{workingFilePath}");
 
                     var startTime = DateTime.Now;
                     Processors.Where(processor => processor.Accept(workItem))
@@ -183,11 +183,11 @@ namespace MangaManager
                     GC.Collect();
                     Interlocked.Add(ref TotalMilliseconds, (long)((DateTime.Now - startTime).TotalMilliseconds));
 
-                    ProgressGui(workItem.InstanceId, CacheWorkItems.InstancesCount, $"{{Green}}DONE:   {{Default}}{workingFilePath}");
+                    ProgressGui?.Invoke(workItem.InstanceId, CacheWorkItems.InstancesCount, $"{{Green}}DONE:   {{Default}}{workingFilePath}");
                 }
                 catch (Exception ex)
                 {
-                    ProgressGui(workItem.InstanceId, CacheWorkItems.InstancesCount, $"{{DarkRed}}FAIL:   {{Default}}{workingFilePath}");
+                    ProgressGui?.Invoke(workItem.InstanceId, CacheWorkItems.InstancesCount, $"{{DarkRed}}FAIL:   {{Default}}{workingFilePath}");
                     View.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}");
                 }
             }
