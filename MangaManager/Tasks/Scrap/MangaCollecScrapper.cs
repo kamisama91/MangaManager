@@ -29,7 +29,8 @@ namespace MangaManager.Tasks.Scrap
                 return false;
             }
 
-            return true;
+            var archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
+            return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && !archiveInfo.IsCalibreArchive;
         }
 
         public void Process(WorkItem workItem)

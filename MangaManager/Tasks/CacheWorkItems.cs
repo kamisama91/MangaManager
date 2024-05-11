@@ -19,7 +19,14 @@ namespace MangaManager.Tasks
             InstanceId = instanceId;
             FilePath = filePath;
             OriginalFilePath = filePath;
-            OriginalLastWriteTime = File.GetLastWriteTime(filePath);
+            if (File.Exists(FilePath))
+            {
+                OriginalLastWriteTime = File.GetLastWriteTime(filePath);
+            }
+            else if (Directory.Exists(FilePath))
+            {
+                OriginalLastWriteTime = Directory.GetLastWriteTime(filePath);
+            }
         }
 
         public void UpdatePath(string path)

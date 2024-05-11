@@ -17,7 +17,7 @@ namespace MangaManager.Tasks.Tag
             }
 
             var archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
-            return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && (Program.Options.TagForce || !archiveInfo.HasComicInfo);
+            return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && !archiveInfo.IsCalibreArchive && (Program.Options.TagForce || !archiveInfo.HasComicInfo);
         }
 
         public void Process(WorkItem workItem)

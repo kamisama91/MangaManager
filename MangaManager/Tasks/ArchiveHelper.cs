@@ -15,6 +15,17 @@ namespace MangaManager.Tasks
     {
         public static ArchiveInfo GetArchiveInfo(string archiveFile)
         {
+            if (!File.Exists(archiveFile))
+            {
+                return new ArchiveInfo
+                {
+                    IsZip = false,
+                    IsCalibreArchive = false,
+                    HasSubdirectories = false,
+                    ComicInfo = null,
+                };
+            }
+
             var archiveInfo = new ArchiveInfo();
             using (var archive = ArchiveFactory.Open(archiveFile))
             {

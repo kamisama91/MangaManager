@@ -1,4 +1,5 @@
 ﻿using MangaManager.Tasks.Archive;
+using MangaManager.Tasks.Checker;
 using MangaManager.Tasks.Convert.Converter;
 using MangaManager.Tasks.Move;
 using MangaManager.Tasks.OnlineLibraryUpdater;
@@ -12,7 +13,17 @@ namespace MangaManager.Tasks
 {
     public class WorkItemProcessors
     {
-        public static IWorkItemProvider[] Providers => Converters.OfType<IWorkItemProvider>().ToArray();
+        public static IWorkItemProvider[] Providers => Converters
+                                                        .Union(Checkers)
+                                                        .Union(Renamers)
+                                                        .Union(Movers)
+                                                        .Union(Scappers)
+                                                        .Union(Taggers)
+                                                        .Union(OnlineLibraryUpdaters)
+                                                        .Union(Archivers)
+                                                        .Union(Checkers)
+                                                        .OfType<IWorkItemProvider>()
+                                                        .ToArray();
 
         public static IWorkItemProcessor[] Converters = new IWorkItemProcessor[]
         {

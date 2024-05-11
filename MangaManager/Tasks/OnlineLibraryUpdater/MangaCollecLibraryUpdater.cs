@@ -10,13 +10,7 @@ namespace MangaManager.Tasks.OnlineLibraryUpdater
     {
         private static ConcurrentBag<string> s_PossessionsIds = new ConcurrentBag<string>(); 
         
-        private MangaCollecHttpClient _httpClient;       
-
-        public MangaCollecLibraryUpdater()
-        {
-            _httpClient = new MangaCollecHttpClient();
-            _httpClient.Login();
-        }
+        private MangaCollecHttpClient _httpClient = new MangaCollecHttpClient();
 
         public bool Accept(WorkItem workItem)
         {
@@ -26,7 +20,7 @@ namespace MangaManager.Tasks.OnlineLibraryUpdater
             }
 
             var archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
-            return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && archiveInfo.HasComicInfo;
+            return archiveInfo.IsZip && !archiveInfo.HasSubdirectories && !archiveInfo.IsCalibreArchive && archiveInfo.HasComicInfo;
         }
 
         public void Process(WorkItem workItem)
@@ -56,6 +50,7 @@ namespace MangaManager.Tasks.OnlineLibraryUpdater
                 {
                     if (s_PossessionsIds.Count == 0)
                     {
+                        _httpClient.Login();
                         _httpClient.GetDataStore<MangaCollecUserCollection>("/v2/users/me/collection")
                             .Possessions.Select(p => p.VolumeId).ToList()
                             .ForEach(s_PossessionsIds.Add);
