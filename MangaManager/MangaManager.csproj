@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <AssemblyVersion>2.0</AssemblyVersion>
   </PropertyGroup>
