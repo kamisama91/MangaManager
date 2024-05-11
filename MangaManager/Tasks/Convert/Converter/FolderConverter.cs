@@ -36,8 +36,7 @@ namespace MangaManager.Tasks.Convert.Converter
         {
             return Directory
                 .EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)
-                .OrderBy(file => int.TryParse(Regex.Replace(Path.GetFileNameWithoutExtension(file), @"^.*?(\d+)$", "$1"), out var pageNumber) ? pageNumber : 0)
-                .ThenBy(file => file)
+                .OrderForArchiving(file => file)
                 .Select(file =>
                 {
                     using var inputStream = File.OpenRead(file);

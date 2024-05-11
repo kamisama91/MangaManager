@@ -79,10 +79,7 @@ namespace MangaManager.Tasks.Convert.Converter
             using var archive = ArchiveFactory.Open(file);
 
             var sortedEntries = archive.Entries.Where(e => !e.IsDirectory)
-                .OrderBy(e => int.TryParse(Regex.Replace(Path.GetDirectoryName(e.Key), @"^.*?(\d+)$", "$1"), out var folderNum) ? folderNum : 0)
-                .ThenBy(e => Path.GetDirectoryName(e.Key))
-                .ThenBy(e => int.TryParse(Regex.Replace(Path.GetFileNameWithoutExtension(e.Key), @"^.*?(\d+)$", "$1"), out var fileNum) ? fileNum : 0)
-                .ThenBy(e => Path.GetFileNameWithoutExtension(e.Key))
+                .OrderForArchiving(e => e.Key)
                 .Select(e => new { Entry = e, DecompressedStream = new MemoryStream() })
                 .ToList();
 
@@ -224,10 +221,7 @@ namespace MangaManager.Tasks.Convert.Converter
             {
                 int i = 0;
                 var entries = archive.Where(e => !e.IsDirectory)
-                    .OrderBy(e => int.TryParse(Regex.Replace(Path.GetDirectoryName(e.FileName), @"^.*?(\d+)$", "$1"), out var folderNum) ? folderNum : 0)
-                    .ThenBy(e => Path.GetDirectoryName(e.FileName))
-                    .ThenBy(e => int.TryParse(Regex.Replace(Path.GetFileNameWithoutExtension(e.FileName), @"^.*?(\d+)$", "$1"), out var fileNum) ? fileNum : 0)
-                    .ThenBy(e => Path.GetFileNameWithoutExtension(e.FileName))
+                    .OrderForArchiving(e => e.FileName)
                     .ToArray();
                 foreach (var entry in entries)
                 {
