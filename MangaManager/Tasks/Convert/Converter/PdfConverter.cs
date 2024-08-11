@@ -38,7 +38,7 @@ namespace MangaManager.Tasks.Convert.Converter
                 {
                     var ms = new MemoryStream(image.RawBytes.ToArray());
                     if (!ms.TryGetImageExtension(out var extension)) { return null; }
-                    return new ArchiveItemStream { Stream = ms, Extension = extension };
+                    return new ArchiveItemStream { Stream = ms, TargetExtension = extension };
                 })
                 .Where(item => item != null);
         }

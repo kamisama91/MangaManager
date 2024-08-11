@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using MangaManager.Models;
+using Newtonsoft.Json.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 
@@ -57,12 +59,12 @@ namespace MangaManager.Tasks.Convert.Converter
             {
                 if (ms.TryGetImageExtension(out var extension))
                 {
-                    return new ArchiveItemStream { Stream = ms, Extension = extension };
+                    return new ArchiveItemStream { Stream = ms, TargetExtension = extension, SourceFileName = key };
                 }
                 else if (Path.GetFileName(key).Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
                 {
                     //Preserve CommicInfo.xml
-                    return new ArchiveItemStream { Stream = ms, FileName = ComicInfo.NAME };
+                    return new ArchiveItemStream { Stream = ms, TargetFileName = ComicInfo.NAME };
                 }
                 else if (Path.GetFileName(key).Equals("thumbs.db", StringComparison.InvariantCultureIgnoreCase)
                       || Path.GetFileName(key).Equals("desktop.ini", StringComparison.InvariantCultureIgnoreCase))
@@ -181,7 +183,7 @@ namespace MangaManager.Tasks.Convert.Converter
                     ms.Position = 0;
                     if (ms.TryGetImageExtension(out var extension))
                     {
-                        yield return new ArchiveItemStream { Stream = ms, Extension = extension };
+                        yield return new ArchiveItemStream { Stream = ms, TargetExtension = extension };
                     }
                 }
                 item = htmlEntries.ContainsKey(item.nextPage) ? htmlEntries[item.nextPage] : null;

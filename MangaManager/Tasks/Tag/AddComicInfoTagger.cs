@@ -1,6 +1,7 @@
 ﻿using MangaManager.Models;
 using MangaManager.Tasks.Convert;
 using MangaManager.Tasks.Rename;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
@@ -42,7 +43,7 @@ namespace MangaManager.Tasks.Tag
 
             var comicInfo = ComicInfoHelper.BuildComicInfoFromSerieAndVolume(serieInfo, volumeInfo);
 
-            ArchiveHelper.UpdateZipWithArchiveItemStreams(file, createdItems: new[] { new ArchiveItemStream { FileName = ComicInfo.NAME, Stream = comicInfo.ToXmlStream() } });
+            ArchiveHelper.UpdateZipWithArchiveItemStreams(file, createdItems: new List<ArchiveItemStream> { new ArchiveItemStream { TargetFileName = ComicInfo.NAME, Stream = comicInfo.ToXmlStream() } });
         }
     }
 }

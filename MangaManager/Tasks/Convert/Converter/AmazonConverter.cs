@@ -100,7 +100,7 @@ namespace MangaManager.Tasks.Convert.Converter
                     var ms = new MemoryStream();
                     inputStream.CopyTo(ms);
                     if (!ms.TryGetImageExtension(out var extension)) { throw new FormatException(); }
-                    return new ArchiveItemStream { Stream = ms, Extension = extension };
+                    return new ArchiveItemStream { Stream = ms, TargetExtension = extension };
                 });
         }
         private IEnumerable<ArchiveItemStream> GetArchiveItemStreamsFromAzw10(string folder)

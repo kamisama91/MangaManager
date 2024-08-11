@@ -44,12 +44,11 @@ namespace MangaManager.Tasks.Convert.Converter
                     inputStream.CopyTo(ms);
                     if (ms.TryGetImageExtension(out var extension))
                     {
-                        return new ArchiveItemStream { Stream = ms, Extension = extension };
-                        
+                        return new ArchiveItemStream { Stream = ms, TargetExtension = extension, SourceFileName = file.Replace(folder, string.Empty).Trim(Path.DirectorySeparatorChar) };
                     }
                     else if(Path.GetFileName(file).Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        return new ArchiveItemStream { Stream = ms, FileName = ComicInfo.NAME };
+                        return new ArchiveItemStream { Stream = ms, TargetFileName = ComicInfo.NAME };
                     }
                     else
                     {

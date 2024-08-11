@@ -45,7 +45,7 @@ namespace MangaManager.Tasks.Convert.Converter
                     {
                         var ms = new MemoryStream(image.Content);
                         if (!ms.TryGetImageExtension(out var extension)) { throw new FormatException(); }
-                        return new ArchiveItemStream { Stream = ms, Extension = extension };
+                        return new ArchiveItemStream { Stream = ms, TargetExtension = extension };
                     });
         }
 

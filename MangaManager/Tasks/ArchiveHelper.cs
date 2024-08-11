@@ -8,11 +8,14 @@ using System.Linq;
 using MangaManager.Models;
 using SharpCompress;
 using IronPython.Runtime;
+using System.Text;
 
 namespace MangaManager.Tasks
 {
     public static class ArchiveHelper
     {
+        public const string RENAME_MAP_NAME = "RenameMap.csv";
+
         public static ArchiveInfo GetArchiveInfo(string archiveFile)
         {
             if (!File.Exists(archiveFile))
@@ -64,15 +67,17 @@ namespace MangaManager.Tasks
             ComicInfo comicInfo = null;
             try
             {
+                var renamedEntries = new Dictionary<string, string>();
+
                 using (var archive = new Ionic.Zip.ZipFile(outputFile))
                 {
                     int i = 0;
                     foreach (var archiveItemStream in extractArchiveItemStreams(sourceFile))
                     {
-                        var fileName = archiveItemStream.FileName;
+                        var fileName = archiveItemStream.TargetFileName;
                         if (string.IsNullOrEmpty(fileName))
                         {
-                            fileName = $"{i:00000}.{archiveItemStream.Extension}";
+                            fileName = $"{i:00000}.{archiveItemStream.TargetExtension}";
                             i++;
                         }
                         else if (fileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
@@ -80,11 +85,23 @@ namespace MangaManager.Tasks
                             comicInfo = ComicInfo.FromXmlStream(archiveItemStream.Stream);
                         }
 
+                        if (!string.IsNullOrEmpty(archiveItemStream.SourceFileName) && !archiveItemStream.SourceFileName.Equals(fileName))
+                        {
+                            renamedEntries.Add(archiveItemStream.SourceFileName, fileName);
+                        }
+
                         var bytes = new byte[archiveItemStream.Stream.Length];
                         archiveItemStream.Stream.Read(bytes, 0, bytes.Length);
                         archive.AddEntry(fileName, bytes);
                         archiveItemStream.Clear();
                     }
+
+                    if (renamedEntries.Count != 0)
+                    {
+                        var renameMapCsvContent = string.Join("\r\n", new[] { "\"Original Path\";\"New Path\"" }.Union(renamedEntries.Select(e => $"\"{e.Key}\";\"{e.Value}\"")));
+                        archive.AddEntry(RENAME_MAP_NAME, Encoding.UTF8.GetBytes(renameMapCsvContent));
+                    }
+
                     archive.Save();
                 }
             }
@@ -104,11 +121,18 @@ namespace MangaManager.Tasks
             return true;
         }
 
-        public static void UpdateZipWithArchiveItemStreams(string sourceFile, IEnumerable<ArchiveItemStream> createdItems = null, Dictionary<string, string> renamedItems = null, HashSet<string> deletedItems = null)
+        public static void UpdateZipWithArchiveItemStreams(string sourceFile, List<ArchiveItemStream> createdItems = null, Dictionary<string, string> renamedItems = null, HashSet<string> deletedItems = null)
         {
             if (createdItems == null && renamedItems == null && deletedItems == null)
             {
                 return;
+            }
+
+            if (renamedItems != null && renamedItems.Count != 0)
+            {
+                createdItems = createdItems ?? new List<ArchiveItemStream>();
+                var renameMapCsvContent = string.Join("\r\n", new[] { "\"Original Path\";\"New Path\"" }.Union(renamedItems.Select(e => $"\"{e.Key}\";\"{e.Value}\"")));
+                createdItems.Add(new ArchiveItemStream { TargetFileName = RENAME_MAP_NAME, Stream = new MemoryStream(Encoding.UTF8.GetBytes(renameMapCsvContent)) });
             }
 
             ComicInfo comicInfo = null;
@@ -116,17 +140,17 @@ namespace MangaManager.Tasks
             {
                 if (createdItems != null)
                 {
-                    var newEntriesKey = createdItems.Select(e => e.FileName).ToHashSet();
+                    var newEntriesKey = createdItems.Select(e => e.TargetFileName).ToHashSet();
                     archive.Where(e => newEntriesKey.Contains(e.FileName)).ToArray().ForEach(archive.RemoveEntry);
                     foreach (var archiveItemStream in createdItems)
                     {
-                        if (archiveItemStream.FileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
+                        if (archiveItemStream.TargetFileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
                         {
                             comicInfo = ComicInfo.FromXmlStream(archiveItemStream.Stream);
                         }
                         var bytes = new byte[archiveItemStream.Stream.Length];
                         archiveItemStream.Stream.Read(bytes, 0, bytes.Length);
-                        archive.AddEntry(archiveItemStream.FileName, bytes);
+                        archive.AddEntry(archiveItemStream.TargetFileName, bytes);
                         archiveItemStream.Clear();
                     }
                 }
