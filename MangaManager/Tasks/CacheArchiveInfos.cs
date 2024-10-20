@@ -13,6 +13,8 @@ namespace MangaManager.Tasks
         public bool HasSubdirectories { get; set; }        
         public bool HasComicInfo => ComicInfo != null;
         public ComicInfo ComicInfo { get; set; }
+        public bool HasRenameMap => RenameMap != null;
+        public RenameMap RenameMap { get; set; }
 
         //Must not be called except by CacheArchiveInfos.GetOrCreate
         public ArchiveInfo() { }

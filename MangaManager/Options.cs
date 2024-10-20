@@ -10,6 +10,9 @@ namespace MangaManager
         [Option('c', "convert", Required = false, HelpText = "convert")]
         public bool Convert { get; set; }
 
+        [Option('s', "reverse", Required = false, HelpText = "reverse convert rename")]
+        public bool ConvertReverse { get; set; }
+
         [Option('r', "rename", Required = false, HelpText = "rename")]
         public bool Rename { get; set; }
 

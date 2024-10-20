@@ -37,6 +37,11 @@ namespace MangaManager.Tasks.Convert.Converter
         public void Process(WorkItem workItem)
         {
             var archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
+            if (Program.Options.ConvertReverse && archiveInfo.IsZip && archiveInfo.HasRenameMap)
+            {
+                UnFlattenCbz(workItem);
+                archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
+            }
 
             if (!archiveInfo.IsZip || archiveInfo.IsCalibreArchive)
             {
@@ -272,6 +277,16 @@ namespace MangaManager.Tasks.Convert.Converter
                 finalPath = FileHelper.GetAvailableFilename(finalPath);
                 FileHelper.Move(file, finalPath);
             }
+        }
+
+        private void UnFlattenCbz(WorkItem workItem)
+        {
+            var file = workItem.FilePath;
+            var archiveInfo = CacheArchiveInfos.GetOrCreate(file);
+            var renamedEntries = archiveInfo.RenameMap.Map.ToDictionary(kv => kv.Value, kv => kv.Key);
+            var deletedEntries = new HashSet<string> { RenameMap.NAME };
+            ArchiveHelper.UpdateZipWithArchiveItemStreams(file, renamedItems: renamedEntries, deletedItems: deletedEntries);
+            RenameToCbz(workItem);
         }
     }
 }

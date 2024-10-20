@@ -14,8 +14,6 @@ namespace MangaManager.Tasks
 {
     public static class ArchiveHelper
     {
-        public const string RENAME_MAP_NAME = "RenameMap.csv";
-
         public static ArchiveInfo GetArchiveInfo(string archiveFile)
         {
             if (!File.Exists(archiveFile))
@@ -26,6 +24,7 @@ namespace MangaManager.Tasks
                     IsCalibreArchive = false,
                     HasSubdirectories = false,
                     ComicInfo = null,
+                    RenameMap = null,
                 };
             }
 
@@ -56,6 +55,12 @@ namespace MangaManager.Tasks
                             entry.OpenEntryStream().CopyTo(entryMemoryStream);
                             archiveInfo.ComicInfo = ComicInfo.FromXmlStream(entryMemoryStream);
                         }
+                        else if (Path.GetFileName(entry.Key).Equals(RenameMap.NAME, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            using var entryMemoryStream = new MemoryStream();
+                            entry.OpenEntryStream().CopyTo(entryMemoryStream);
+                            archiveInfo.RenameMap = RenameMap.FromCsvStream(entryMemoryStream);
+                        }
                     }
                 }
             }
@@ -65,6 +70,7 @@ namespace MangaManager.Tasks
         public static bool CreateZipFromArchiveItemStreams(string sourceFile, string outputFile, Func<string, IEnumerable<ArchiveItemStream>> extractArchiveItemStreams)
         {
             ComicInfo comicInfo = null;
+            RenameMap renameMap = null;
             try
             {
                 var renamedEntries = new Dictionary<string, string>();
@@ -98,8 +104,8 @@ namespace MangaManager.Tasks
 
                     if (renamedEntries.Count != 0)
                     {
-                        var renameMapCsvContent = string.Join("\r\n", new[] { "\"Original Path\";\"New Path\"" }.Union(renamedEntries.Select(e => $"\"{e.Key}\";\"{e.Value}\"")));
-                        archive.AddEntry(RENAME_MAP_NAME, Encoding.UTF8.GetBytes(renameMapCsvContent));
+                        renameMap = new RenameMap(renamedEntries);
+                        archive.AddEntry(RenameMap.NAME, renameMap.ToCsvStream());
                     }
 
                     archive.Save();
@@ -117,6 +123,7 @@ namespace MangaManager.Tasks
             archiveInfo.IsCalibreArchive = false;
             archiveInfo.HasSubdirectories = false;
             archiveInfo.ComicInfo = comicInfo;
+            archiveInfo.RenameMap = renameMap;
 
             return true;
         }
@@ -131,11 +138,10 @@ namespace MangaManager.Tasks
             if (renamedItems != null && renamedItems.Count != 0)
             {
                 createdItems = createdItems ?? new List<ArchiveItemStream>();
-                var renameMapCsvContent = string.Join("\r\n", new[] { "\"Original Path\";\"New Path\"" }.Union(renamedItems.Select(e => $"\"{e.Key}\";\"{e.Value}\"")));
-                createdItems.Add(new ArchiveItemStream { TargetFileName = RENAME_MAP_NAME, Stream = new MemoryStream(Encoding.UTF8.GetBytes(renameMapCsvContent)) });
+                var renameMap = new RenameMap(renamedItems);
+                createdItems.Add(new ArchiveItemStream { TargetFileName = RenameMap.NAME, Stream = renameMap.ToCsvStream() });
             }
-
-            ComicInfo comicInfo = null;
+            
             using (var archive = Ionic.Zip.ZipFile.Read(sourceFile))
             {
                 if (createdItems != null)
@@ -144,10 +150,6 @@ namespace MangaManager.Tasks
                     archive.Where(e => newEntriesKey.Contains(e.FileName)).ToArray().ForEach(archive.RemoveEntry);
                     foreach (var archiveItemStream in createdItems)
                     {
-                        if (archiveItemStream.TargetFileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            comicInfo = ComicInfo.FromXmlStream(archiveItemStream.Stream);
-                        }
                         var bytes = new byte[archiveItemStream.Stream.Length];
                         archiveItemStream.Stream.Read(bytes, 0, bytes.Length);
                         archive.AddEntry(archiveItemStream.TargetFileName, bytes);
@@ -160,32 +162,19 @@ namespace MangaManager.Tasks
                     foreach (var entry in archive.Where(e => renamedItems.ContainsKey(e.FileName)).ToArray())
                     {
                         entry.FileName = renamedItems[entry.FileName];
-                        if (entry.FileName.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            using var entryMemoryStream = new MemoryStream();
-                            using var inputStream = entry.OpenReader();
-                            inputStream.CopyTo(entryMemoryStream);
-                            comicInfo = ComicInfo.FromXmlStream(entryMemoryStream);
-                        }
                     }
                 }
 
                 if (deletedItems != null)
                 {
                     archive.Where(e => deletedItems.Contains(e.FileName)).ToArray().ForEach(archive.RemoveEntry);
-                    if (deletedItems.Any(f => f.Equals(ComicInfo.NAME, StringComparison.InvariantCultureIgnoreCase)))
-                    {
-                        comicInfo = null;
-                    }
                 }
 
                 archive.Save();
             }
 
+            CacheArchiveInfos.RemoveItem(sourceFile);
             var archiveInfo = CacheArchiveInfos.GetOrCreate(sourceFile);
-            archiveInfo.IsCalibreArchive = false; 
-            archiveInfo.HasSubdirectories = false;            
-            archiveInfo.ComicInfo = comicInfo;
 
             CacheWorkItems.Get(sourceFile)?.RestoreLastWriteTime();
         }
