@@ -38,9 +38,34 @@ namespace MangaManager.Tasks.Convert.Converter
             return sourceDocument.Format.Opf.Spine.ItemRefs
                 .Select(spine => sourceDocument.Format.Opf.Manifest.Items.Where(manifest => manifest.Id == spine.IdRef).Single())
                 .Select(manifest => sourceDocument.Resources.Html.Where(resource => resource.Href == manifest.Href).Single())
-                .SelectMany(html => XDocument.Parse(html.TextContent).DescendantNodes().OfType<XElement>().Where(element => imageElements.Contains(element.Name.LocalName)))
-                .Select(imageElement => imageElement.Attributes().Where(attribute => imageSrcAttributes.Contains(attribute.Name.LocalName)).Single())
-                .Select(imageSrcAttribute => sourceDocument.Resources.All.Where(resource => resource.Href == imageSrcAttribute.Value).Single())
+                .SelectMany(html => XDocument.Parse(html.TextContent).DescendantNodes().OfType<XElement>().Where(element => imageElements.Contains(element.Name.LocalName)).Select(imageElement => new { html, imageElement }))
+                .Select(item => new { item.html, imageSrcAttribute = item.imageElement.Attributes().Where(attribute => imageSrcAttributes.Contains(attribute.Name.LocalName)).Single() })
+                .Select(item =>
+                    {
+                        var webStyleAbsolutePathes = new List<string>();
+                        if (item.imageSrcAttribute.Value.StartsWith('/'))
+                        {
+                            //Path is rooted so only solution to get images is to use input path
+                            webStyleAbsolutePathes.Add(item.imageSrcAttribute.Value);
+                        }
+                        else
+                        {
+                            //Path is not rooted so check for relative path from html file path
+                            var basePath = Path.GetFullPath("/");
+                            var notEvaluatedPath = Path.Combine(Path.GetDirectoryName(item.html.AbsolutePath), item.imageSrcAttribute.Value);
+                            var osStylePath = Path.GetRelativePath(basePath, notEvaluatedPath);
+                            webStyleAbsolutePathes.Add($"/{osStylePath.Replace("\\", "/")}");
+                            
+                            if (!item.imageSrcAttribute.Value.StartsWith('.'))
+                            {
+                                //Path is not explicitely relative (starting with . ou ..)
+                                //So it could also be a rooted path without explicit / initial character (lower priority than possible relative path)
+                                webStyleAbsolutePathes.Add($"/{item.imageSrcAttribute.Value}");
+                            }
+                        }
+                        //Look for image using AbsolutePath (more accurate than href)
+                        return sourceDocument.Resources.All.Where(resource => webStyleAbsolutePathes.Contains(resource.AbsolutePath)).First();
+                    })
                 .Select(image =>
                     {
                         var ms = new MemoryStream(image.Content);
