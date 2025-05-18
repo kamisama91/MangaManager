@@ -44,6 +44,8 @@ namespace MangaManager
 
             try
             {
+                Options.ThowWhenNotValid();
+
                 //Create Workers producer
                 var producer = new WorkItemsProducer { Providers = WorkItemProcessors.Providers };
 
@@ -74,8 +76,9 @@ namespace MangaManager
                 View.Info($"   Items: {CacheWorkItems.InstancesCount}");
                 View.Info($"   Cache: {CacheArchiveInfos.Hits} Hits / {CacheArchiveInfos.Misses} Misses");
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                View.Error(e.Message);
                 return -1;
             }
             return 0;

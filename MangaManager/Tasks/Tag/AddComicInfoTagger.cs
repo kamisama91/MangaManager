@@ -12,7 +12,7 @@ namespace MangaManager.Tasks.Tag
     {
         public bool Accept(WorkItem workItem)
         {
-            if (!Program.Options.Tag)
+            if (!Program.Options.TagRegular && !Program.Options.TagForce)
             {
                 return false;
             }

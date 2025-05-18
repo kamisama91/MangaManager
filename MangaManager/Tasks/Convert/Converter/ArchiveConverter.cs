@@ -25,7 +25,7 @@ namespace MangaManager.Tasks.Convert.Converter
 
         public bool Accept(WorkItem workItem)
         {
-            if (!Program.Options.Convert)
+            if (!Program.Options.ConvertRegular && !Program.Options.ConvertBack)
             {
                 return false;
             }
@@ -37,7 +37,7 @@ namespace MangaManager.Tasks.Convert.Converter
         public void Process(WorkItem workItem)
         {
             var archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
-            if (Program.Options.ConvertReverse && archiveInfo.IsZip && archiveInfo.HasRenameMap)
+            if (Program.Options.ConvertBack && archiveInfo.IsZip && archiveInfo.HasRenameMap)
             {
                 UnFlattenCbz(workItem);
                 archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);

@@ -54,11 +54,11 @@ namespace MangaManager.View
                 Width = Dim.Fill(),
             };
 
-            _convertProgressBar = BuildProgressBar("Convert", Program.Options.Convert);
+            _convertProgressBar = BuildProgressBar("Convert", Program.Options.ConvertRegular || Program.Options.ConvertBack);
             _renameProgressBar = BuildProgressBar("Rename", Program.Options.Rename);
             _moveProgressBar = BuildProgressBar("Move", Program.Options.Move);
-            _scrapProgressBar = BuildProgressBar("Scrap", Program.Options.Scrap);
-            _tagProgressBar = BuildProgressBar("Tag", Program.Options.Tag);
+            _scrapProgressBar = BuildProgressBar("Scrap", Program.Options.ScrapRegular || Program.Options.ScrapAutoIgnore);
+            _tagProgressBar = BuildProgressBar("Tag", Program.Options.TagRegular || Program.Options.TagForce);
             _onlineUpdateProgressBar = BuildProgressBar("Online upd.", Program.Options.OnlineUpdate);
             _archiveProgressBar = BuildProgressBar("Archive", Program.Options.Archive);
 

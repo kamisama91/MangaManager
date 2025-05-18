@@ -21,7 +21,7 @@ namespace MangaManager.Tasks.Convert.Converter
 
         public bool Accept(WorkItem workItem)
         {
-            if (!Program.Options.Convert)
+            if (!Program.Options.ConvertRegular)
             {
                 return false;
             }

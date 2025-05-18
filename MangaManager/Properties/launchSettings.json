@@ -13,7 +13,7 @@
 
     "Official Vrac - 1. Convert": {
       "commandName": "Project",
-      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --convert --rename --move --scrap --ignore"
+      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --convert --rename --move --scrap-no-prompt"
     },
     "Official Vrac - 2. Scrap missing": {
       "commandName": "Project",
@@ -21,7 +21,7 @@
     },
     "Official Vrac - 3. Tag": {
       "commandName": "Project",
-      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --tag --force"
+      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --tag-force"
     },
     "Official Vrac - 4. Library update": {
       "commandName": "Project",
@@ -35,7 +35,7 @@
 
     "Official Vrac - 999. Revert convert": {
       "commandName": "Project",
-      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --convert --reverse"
+      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --convert-back"
     }
   }
 }

@@ -24,7 +24,7 @@ namespace MangaManager.Tasks.Scrap
 
         public bool Accept(WorkItem workItem)
         {
-            if (!Program.Options.Scrap)
+            if (!Program.Options.ScrapRegular && !Program.Options.ScrapAutoIgnore)
             {
                 return false;
             }
