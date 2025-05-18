@@ -8,7 +8,7 @@ using System.Text;
 
 namespace MangaManager.Tasks.HttpClient
 {
-    public class MangaCollecHttpClient
+    public partial class MangaCollecHttpClient
     {
         private static string s_clientId = "";
         private static string s_clientSecret = "";
