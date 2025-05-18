@@ -5,46 +5,48 @@ namespace MangaManager.View
 {
     public class ViewController
     {
+        public EventHandler ViewLoaded;
+
         private long RefreshProgressBarTotalMilliseconds;
         public decimal RefreshProgressBarTotalSeconds => RefreshProgressBarTotalMilliseconds / 1000;
 
-        private MainView _view;
-        public EventHandler ViewLoaded;
-
-        public void Show()
+        private object _consoleInteractionLock = new object();
+        private MainView _consoleInteractiveView;
+        
+        public void Show(Options options)
         {
-            _view = new MainView();
-            _view.Loaded += () => ViewLoaded?.Invoke(this, EventArgs.Empty);
-            _view.Show();
+            _consoleInteractiveView = new MainView(options);
+            _consoleInteractiveView.Loaded += () => ViewLoaded?.Invoke(this, EventArgs.Empty);
+            _consoleInteractiveView.Show();
         }
 
         public void ConversionProgress(int current, int total, string description)
         {
-            RefreshProgressBar(_view?._convertProgressBar, current, total, description);
+            RefreshProgressBar(_consoleInteractiveView?._convertProgressBar, current, total, description);
         }
         public void RenamingProgress(int current, int total, string description)
         {
-            RefreshProgressBar(_view?._renameProgressBar, current, total, description);
+            RefreshProgressBar(_consoleInteractiveView?._renameProgressBar, current, total, description);
         }
         public void MovingProgress(int current, int total, string description)
         {
-            RefreshProgressBar(_view?._moveProgressBar, current, total, description);
+            RefreshProgressBar(_consoleInteractiveView?._moveProgressBar, current, total, description);
         }
         public void ScrappingProgress(int current, int total, string description)
         {
-            RefreshProgressBar(_view?._scrapProgressBar, current, total, description);
+            RefreshProgressBar(_consoleInteractiveView?._scrapProgressBar, current, total, description);
         }
         public void TaggingProgress(int current, int total, string description)
         {
-            RefreshProgressBar(_view?._tagProgressBar, current, total, description);
+            RefreshProgressBar(_consoleInteractiveView?._tagProgressBar, current, total, description);
         }
         public void OnlineUpdatingProgress(int current, int total, string description)
         {
-            RefreshProgressBar(_view?._onlineUpdateProgressBar, current, total, description);
+            RefreshProgressBar(_consoleInteractiveView?._onlineUpdateProgressBar, current, total, description);
         }
         public void ArchivingingProgress(int current, int total, string description)
         {
-            RefreshProgressBar(_view?._archiveProgressBar, current, total, description);
+            RefreshProgressBar(_consoleInteractiveView?._archiveProgressBar, current, total, description);
         }
         private void RefreshProgressBar(ProgressBarWithDescriptionView progressBar, int current, int max, string description)
         {
@@ -119,14 +121,21 @@ namespace MangaManager.View
 
         public string AskUserInput(string message)
         {
-            if (_view?._userInputView != null)
+            if (_consoleInteractiveView?._userInputView != null)
             {
-                lock (_view._userInputView)
+                lock (_consoleInteractiveView._userInputView)
                 {
-                    return _view._userInputView.AskUserInput(message);
+                    return _consoleInteractiveView._userInputView.AskUserInput(message);
                 }
             }
-            return null;
+            else
+            {
+                lock(_consoleInteractionLock)
+                {
+                    Info(message);
+                    return Console.ReadLine();
+                }
+            }
         }
 
         public void Info(string message)
@@ -143,16 +152,19 @@ namespace MangaManager.View
         }
         private void Log(string message, ConsoleColor color)
         {
-            if (_view?._logTextView != null)
+            if (_consoleInteractiveView?._logTextView != null)
             {
-                _view._logTextView.AddLine($"{{{color}}}{message}{{Default}}");
+                _consoleInteractiveView._logTextView.AddLine($"{{{color}}}{message}{{Default}}");
             }
             else
             {
-                var backup = Console.ForegroundColor;
-                Console.ForegroundColor = color;
-                Console.WriteLine(message);
-                Console.ForegroundColor = backup;
+                lock (_consoleInteractionLock)
+                {
+                    var backup = Console.ForegroundColor;
+                    Console.ForegroundColor = color;
+                    Console.WriteLine(message);
+                    Console.ForegroundColor = backup;
+                }
             }
         }
     }

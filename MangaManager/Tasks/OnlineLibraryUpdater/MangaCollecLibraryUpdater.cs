@@ -38,7 +38,7 @@ namespace MangaManager.Tasks.OnlineLibraryUpdater
             }
             else
             {
-                Program.View.Error($"Unknown volume: {Path.GetFileName(workItem.FilePath)}");
+                Program.ViewController.Error($"Unknown volume: {Path.GetFileName(workItem.FilePath)}");
             }
         }
 

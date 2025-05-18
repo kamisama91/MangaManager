@@ -40,9 +40,9 @@ namespace MangaManager.Tasks.Checker
                 .ToList();
 
             var logSeparator = $"{Environment.NewLine}   ";
-            Program.View.Info($"In library {archivedFiles.Count} / Online: {possessions.Count}");
-            Program.View.Warning($"Missing online:{logSeparator}{string.Join($"{logSeparator}", archivedFiles.Except(possessions))}");
-            Program.View.Error($"Missing in library:{logSeparator}{string.Join($"{logSeparator}", possessions.Except(archivedFiles))}");
+            Program.ViewController.Info($"In library {archivedFiles.Count} / Online: {possessions.Count}");
+            Program.ViewController.Warning($"Missing online:{logSeparator}{string.Join($"{logSeparator}", archivedFiles.Except(possessions))}");
+            Program.ViewController.Error($"Missing in library:{logSeparator}{string.Join($"{logSeparator}", possessions.Except(archivedFiles))}");
         }
 
         private string GetNameFromVolumeId(string id)

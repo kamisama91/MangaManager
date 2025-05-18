@@ -78,7 +78,7 @@ namespace MangaManager.Tasks.Scrap
             {
                 if (Program.Options.ScrapAutoIgnore)
                 {
-                    Program.View.Warning($"Automatically ignored alias from scrapping: {alias}");
+                    Program.ViewController.Warning($"Automatically ignored alias from scrapping: {alias}");
                     s_IgnoredAlias.Add(alias);
                     return;
                 }
@@ -88,7 +88,7 @@ namespace MangaManager.Tasks.Scrap
                 message += $"{{{ConsoleColor.DarkGray}}}   {matchedSeries.Length} -> MangaCollec ID{Environment.NewLine}";
                 message += $"{{{ConsoleColor.DarkGray}}}   {matchedSeries.Length + 1} -> Ignore{Environment.NewLine}";
 
-                var userChoiceStr = Program.View.AskUserInput(message);
+                var userChoiceStr = Program.ViewController.AskUserInput(message);
                 var userChoice = int.TryParse(userChoiceStr, out var _i) ? _i : matchedSeries.Length + 2;
                 if(userChoice < matchedSeries.Length)
                 {
@@ -98,7 +98,7 @@ namespace MangaManager.Tasks.Scrap
                 {
                     message = $"{{{ConsoleColor.White}}}Serie: {{{ConsoleColor.DarkYellow}}}{name}{Environment.NewLine}";
                     message += $"{{{ConsoleColor.White}}}   MangaCollec ID?{Environment.NewLine}";
-                    serieId = Program.View.AskUserInput(message);
+                    serieId = Program.ViewController.AskUserInput(message);
                 }
                 else
                 {
@@ -127,7 +127,7 @@ namespace MangaManager.Tasks.Scrap
             {
                 if (Program.Options.ScrapAutoIgnore)
                 {
-                    Program.View.Warning($"Automatically ignored alias from scrapping: {alias}");
+                    Program.ViewController.Warning($"Automatically ignored alias from scrapping: {alias}");
                     s_IgnoredAlias.Add(alias);
                     return;
                 }
@@ -143,7 +143,7 @@ namespace MangaManager.Tasks.Scrap
                     else if ((matchedEditions[i].LastVolumeNumber > 0 && matchedEditions[i].VolumesCount == matchedEditions[i].LastVolumeNumber) || (matchedEditions[i].LastVolumeNumber == 0 && matchedEditions[i].VolumesCount == 1)) { message += $" (complet)"; }
                     message += Environment.NewLine;
                 }
-                var userChoiceStr = Program.View.AskUserInput(message);
+                var userChoiceStr = Program.ViewController.AskUserInput(message);
                 var userChoice = int.TryParse(userChoiceStr, out var _i) ? _i : matchedSeries.Length + 2;
                 if (userChoice < matchedEditions.Length)
                 {

@@ -113,7 +113,7 @@ namespace MangaManager.Tasks
             }
             catch (FormatException)
             {
-                Program.View.Error($"{Path.GetFileName(sourceFile)} contains some invalid files");
+                Program.ViewController.Error($"{Path.GetFileName(sourceFile)} contains some invalid files");
                 File.Delete(outputFile);
                 return false;
             }

@@ -22,7 +22,7 @@ namespace MangaManager.View
         public ScrollableMultiColorTextView _logTextView { get; private set; }
         public UserInputView _userInputView { get; private set; }
 
-        public MainView()
+        public MainView(Options options)
         {
             Title = "Manga Manager";
             X = 0;
@@ -54,13 +54,13 @@ namespace MangaManager.View
                 Width = Dim.Fill(),
             };
 
-            _convertProgressBar = BuildProgressBar("Convert", Program.Options.ConvertRegular || Program.Options.ConvertBack);
-            _renameProgressBar = BuildProgressBar("Rename", Program.Options.Rename);
-            _moveProgressBar = BuildProgressBar("Move", Program.Options.Move);
-            _scrapProgressBar = BuildProgressBar("Scrap", Program.Options.ScrapRegular || Program.Options.ScrapAutoIgnore);
-            _tagProgressBar = BuildProgressBar("Tag", Program.Options.TagRegular || Program.Options.TagForce);
-            _onlineUpdateProgressBar = BuildProgressBar("Online upd.", Program.Options.OnlineUpdate);
-            _archiveProgressBar = BuildProgressBar("Archive", Program.Options.Archive);
+            _convertProgressBar = BuildProgressBar("Convert", options.ConvertRegular || options.ConvertBack);
+            _renameProgressBar = BuildProgressBar("Rename", options.Rename);
+            _moveProgressBar = BuildProgressBar("Move", options.Move);
+            _scrapProgressBar = BuildProgressBar("Scrap", options.ScrapRegular || options.ScrapAutoIgnore);
+            _tagProgressBar = BuildProgressBar("Tag", options.TagRegular || options.TagForce);
+            _onlineUpdateProgressBar = BuildProgressBar("Online upd.", options.OnlineUpdate);
+            _archiveProgressBar = BuildProgressBar("Archive", options.Archive);
 
             //prompt
             _userInputView = new UserInputView()
@@ -96,7 +96,6 @@ namespace MangaManager.View
         {
             if (!enabled)
                 return null;
-
 
             var YPos = _tasks.Subviews[0].Subviews.Any()
                 ? Pos.Bottom(_tasks.Subviews[0].Subviews.LastOrDefault())

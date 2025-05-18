@@ -40,7 +40,7 @@ namespace MangaManager.Tasks
             } while (File.Exists(newFilename));
 
 
-            Program.View.Warning($"{Path.GetFileName(expectedFilename)} already used, using {Path.GetFileName(newFilename)}");
+            Program.ViewController.Warning($"{Path.GetFileName(expectedFilename)} already used, using {Path.GetFileName(newFilename)}");
             return newFilename;
         }
 

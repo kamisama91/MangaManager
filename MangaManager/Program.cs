@@ -14,8 +14,13 @@ namespace MangaManager
 {
     public class Program
     {
+        public static Options Options { get; private set; }
+        public static ViewController ViewController { get; private set; }
+
         public static void Main(string[] args)
         {
+            ViewController = new ViewController();
+
             Parser.Default
                 .ParseArguments<Options>(args)
                 .MapResult(
@@ -23,27 +28,19 @@ namespace MangaManager
                     errs => Environment.ExitCode = -2);
         }
 
-        public static Options Options { get; private set; }
-        public static ViewController View { get; private set; }
-
         private static async Task<int> RunWithView(Options options)
         {
-            Options = options;
-            View = new ViewController();
-
-            var exitCode = 0;            
-            View.ViewLoaded += async (s, e) => { exitCode = await Run(options); };
-            View.Show();
+            var exitCode = 0;
+            ViewController.ViewLoaded += async (s, e) => { exitCode = await Run(options); };
+            ViewController.Show(options);
             return await Task.FromResult(exitCode);
         }
 
         private static async Task<int> Run(Options options)
         {
-            Options ??= options;
-            View ??= new ViewController();
-
             try
             {
+                Options = options;
                 Options.ThowWhenNotValid();
 
                 //Create Workers producer
@@ -52,13 +49,13 @@ namespace MangaManager
                 //Create Workers consumers
                 var consumers = new WorkItemsConsumer[]
                 {
-                    new() { Processors = WorkItemProcessors.Converters, ProgressGui = View.ConversionProgress, DegreeOfParallelism = 3 },
-                    new() { Processors = WorkItemProcessors.Renamers, ProgressGui = View.RenamingProgress },
-                    new() { Processors = WorkItemProcessors.Movers, ProgressGui = View.MovingProgress },
-                    new() { Processors = WorkItemProcessors.Scappers, ProgressGui = View.ScrappingProgress },
-                    new() { Processors = WorkItemProcessors.Taggers, ProgressGui = View.TaggingProgress, DegreeOfParallelism = 2 },
-                    new() { Processors = WorkItemProcessors.OnlineLibraryUpdaters, ProgressGui = View.OnlineUpdatingProgress },
-                    new() { Processors = WorkItemProcessors.Archivers, ProgressGui = View.ArchivingingProgress },
+                    new() { Processors = WorkItemProcessors.Converters, ProgressGui = ViewController.ConversionProgress, DegreeOfParallelism = 3 },
+                    new() { Processors = WorkItemProcessors.Renamers, ProgressGui = ViewController.RenamingProgress },
+                    new() { Processors = WorkItemProcessors.Movers, ProgressGui = ViewController.MovingProgress },
+                    new() { Processors = WorkItemProcessors.Scappers, ProgressGui = ViewController.ScrappingProgress },
+                    new() { Processors = WorkItemProcessors.Taggers, ProgressGui = ViewController.TaggingProgress, DegreeOfParallelism = 2 },
+                    new() { Processors = WorkItemProcessors.OnlineLibraryUpdaters, ProgressGui = ViewController.OnlineUpdatingProgress },
+                    new() { Processors = WorkItemProcessors.Archivers, ProgressGui = ViewController.ArchivingingProgress },
                     new() { Processors = WorkItemProcessors.Checkers, ProgressGui = null },
                 };
 
@@ -70,15 +67,15 @@ namespace MangaManager
                     RunSingleThread(producer, consumers);
 
                 var duration = DateTime.Now - startTime;
-                View.Info($"Finished:");
-                View.Info($"   Total Time:  {Math.Floor(duration.TotalSeconds / 60)} min {Math.Floor(duration.TotalSeconds % 60)} sec");
-                View.Info($"   View  Time:  {Math.Floor(View.RefreshProgressBarTotalSeconds / 60)} min {Math.Floor(View.RefreshProgressBarTotalSeconds % 60)} sec");
-                View.Info($"   Items: {CacheWorkItems.InstancesCount}");
-                View.Info($"   Cache: {CacheArchiveInfos.Hits} Hits / {CacheArchiveInfos.Misses} Misses");
+                ViewController.Info($"Finished:");
+                ViewController.Info($"   Total Time:  {Math.Floor(duration.TotalSeconds / 60)} min {Math.Floor(duration.TotalSeconds % 60)} sec");
+                //ViewController.Info($"   View  Time:  {Math.Floor(ViewController.RefreshProgressBarTotalSeconds / 60)} min {Math.Floor(ViewController.RefreshProgressBarTotalSeconds % 60)} sec");
+                ViewController.Info($"   Items: {CacheWorkItems.InstancesCount}");
+                //ViewController.Info($"   Cache: {CacheArchiveInfos.Hits} Hits / {CacheArchiveInfos.Misses} Misses");
             }
             catch (Exception e)
             {
-                View.Error(e.Message);
+                ViewController.Error(e.Message);
                 return -1;
             }
             return 0;
@@ -192,7 +189,7 @@ namespace MangaManager
                 catch (Exception ex)
                 {
                     ProgressGui?.Invoke(workItem.InstanceId, CacheWorkItems.InstancesCount, $"{{DarkRed}}FAIL:   {{Default}}{workingFilePath}");
-                    View.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}");
+                    ViewController.Error($"{Path.GetFileName(workingFilePath)}: {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}");
                 }
             }
         }

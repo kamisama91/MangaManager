@@ -4,7 +4,6 @@ using MangaManager.Tasks.Rename;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Encodings.Web;
 
 namespace MangaManager.Tasks.Tag
 {
@@ -32,7 +31,7 @@ namespace MangaManager.Tasks.Tag
             var serieInfo = CacheMetadatas.Series.SingleOrDefault(s => s.Aliases.Contains(serie.ToLowerInvariant()));
             if (serieInfo == null)
             {
-                Program.View.Error($"Missing metadata: {Path.GetFileName(file)}");
+                Program.ViewController.Error($"Missing metadata: {Path.GetFileName(file)}");
                 return;
             }
 
