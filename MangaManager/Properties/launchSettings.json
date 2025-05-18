@@ -4,10 +4,38 @@
       "commandName": "Project",
       "commandLineArgs": "--input \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\" --output \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\\__archive\" --quarantine \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\\__quarantine\" --convert"
     },
-    "WSL - Ubuntu": {
+    "Debug - WSL": {
       "commandName": "WSL2",
       "distributionName": "Ubuntu",
       "commandLineArgs": "\"{OutDir}/MangaManager.dll\" --input /mnt/d/MesDocuments/Alexandre/Bureau/tmp/__ --output \"/mnt/d/MesDocuments/Alexandre/Bureau/tmp/__/__archive\" --quarantine \"/mnt/d/MesDocuments/Alexandre/Bureau/tmp/__/__quarantine\" --convert"
+    },
+
+
+    "Official Vrac - 1. Convert": {
+      "commandName": "Project",
+      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --convert --rename --move --scrap --ignore"
+    },
+    "Official Vrac - 2. Scrap missing": {
+      "commandName": "Project",
+      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --scrap"
+    },
+    "Official Vrac - 3. Tag": {
+      "commandName": "Project",
+      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --tag --force"
+    },
+    "Official Vrac - 4. Library update": {
+      "commandName": "Project",
+      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --online-update --archive"
+    },
+    "Official Vrac - 5. Online check": {
+      "commandName": "Project",
+      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --online-check"
+    },
+
+
+    "Official Vrac - 999. Revert convert": {
+      "commandName": "Project",
+      "commandLineArgs": "--data W:\\.bin_new\\data\\ --input W:\\Mangas_Official_Vrac\\ --output W:\\Mangas_Official\\ --quarantine W:\\Mangas_Official_Vrac\\__quarantine__/ --convert --reverse"
     }
   }
 }

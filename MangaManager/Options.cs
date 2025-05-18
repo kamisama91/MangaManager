@@ -4,6 +4,9 @@ namespace MangaManager
 {
     public class Options
     {
+        [Option('d', "data", Required = false, HelpText = "data folder")]
+        public string DataFolder { get; set; }
+
         [Option('i', "input", Required = true, HelpText = "input")]
         public string SourceFolder { get; set; }
 
