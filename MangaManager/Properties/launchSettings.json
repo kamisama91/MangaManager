@@ -2,12 +2,12 @@
   "profiles": {
     "Debug": {
       "commandName": "Project",
-      "commandLineArgs": "--input \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\" --output \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\\__archive\" --quarantine \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\\__quarantine\" --convert"
+      "commandLineArgs": "--data \"..\\..\\..\\..\\Data\" --input \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\" --output \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\\__archive\" --quarantine \"D:\\MesDocuments\\Alexandre\\Bureau\\tmp\\__\\__quarantine\" --convert --rename --move --scrap"
     },
     "Debug - WSL": {
       "commandName": "WSL2",
       "distributionName": "Ubuntu",
-      "commandLineArgs": "\"{OutDir}/MangaManager.dll\" --input /mnt/d/MesDocuments/Alexandre/Bureau/tmp/__ --output \"/mnt/d/MesDocuments/Alexandre/Bureau/tmp/__/__archive\" --quarantine \"/mnt/d/MesDocuments/Alexandre/Bureau/tmp/__/__quarantine\" --convert"
+      "commandLineArgs": "\"{OutDir}/MangaManager.dll\" --data ../../../../Data --input /mnt/d/MesDocuments/Alexandre/Bureau/tmp/__ --output \"/mnt/d/MesDocuments/Alexandre/Bureau/tmp/__/__archive\" --quarantine \"/mnt/d/MesDocuments/Alexandre/Bureau/tmp/__/__quarantine\" --convert --rename --move --scrap"
     },
 
 

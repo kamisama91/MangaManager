@@ -132,5 +132,12 @@ $RECYCLE.BIN/
 
 _NCrunch*
 
+# =========================
+# MangaManager specific
+# =========================
+
 # Files with credentials
 *.Credentials.cs
+
+#Data folder
+/Data/*
