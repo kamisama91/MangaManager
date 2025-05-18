@@ -35,7 +35,7 @@ namespace MangaManager.View
             set
             {
                 _text = value;
-                var uncoloredText = BuildTextWithColor(_text.ToString(), out var colorIndexes);
+                var uncoloredText = BuildTextWithColor(_text, out var colorIndexes);
                 Data = colorIndexes;
                 base.Text = uncoloredText;
             }
@@ -68,10 +68,10 @@ namespace MangaManager.View
             SetNormalColor(line, idx);
         }
 
-        private static string BuildTextWithColor(string coloredText, out Dictionary<int, string> colorIndexes)
+        private static ustring BuildTextWithColor(ustring coloredText, out Dictionary<int, string> colorIndexes)
         {
             colorIndexes = new Dictionary<int, string>();
-            var finalText = new System.Text.StringBuilder();
+            var finalText = (ustring)string.Empty;
             var searchForColors = true;
             do
             {
@@ -87,31 +87,32 @@ namespace MangaManager.View
                     if (colorStartPositions[0].Position > 0)
                     {
                         colorIndexes[0] = "Default";
-                        finalText.Append(coloredText.Substring(0, colorStartPositions[0].Position));
+                        finalText += coloredText.Substring(0, colorStartPositions[0].Position);
                     }
                     if (colorStartPositions.Length == 1)
                     {
                         var partialColoredText = coloredText.Substring(colorStartPositions[0].Position, coloredText.Length - colorStartPositions[0].Position).Replace(colorStartPositions[0].TextToken, string.Empty);
                         colorIndexes[finalText.Length] = colorStartPositions[0].ForegroundColor;
-                        finalText.Append(partialColoredText);
+                        finalText += partialColoredText;
                         searchForColors = false;
                     }
                     else
                     {
                         var partialColoredText = coloredText.Substring(colorStartPositions[0].Position, colorStartPositions[1].Position - colorStartPositions[0].Position).Replace(colorStartPositions[0].TextToken, string.Empty);
                         colorIndexes[finalText.Length] = colorStartPositions[0].ForegroundColor;
-                        finalText.Append(partialColoredText);
+                        finalText += partialColoredText;
                         coloredText = coloredText.Substring(colorStartPositions[1].Position, coloredText.Length - colorStartPositions[1].Position);
                     }
                 }
                 else
                 {
                     colorIndexes[0] = "Default";
-                    finalText.Append(coloredText);
+                    finalText += coloredText;
                     searchForColors = false;
                 }
             } while (searchForColors);
-            return finalText.ToString();
+
+            return finalText;
         }
     }
 }
