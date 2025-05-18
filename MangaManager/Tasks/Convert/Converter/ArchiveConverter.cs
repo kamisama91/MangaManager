@@ -37,10 +37,13 @@ namespace MangaManager.Tasks.Convert.Converter
         public void Process(WorkItem workItem)
         {
             var archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
-            if (Program.Options.ConvertBack && archiveInfo.IsZip && archiveInfo.HasRenameMap)
+            if (Program.Options.ConvertBack)
             {
-                UnFlattenCbz(workItem);
-                archiveInfo = CacheArchiveInfos.GetOrCreate(workItem.FilePath);
+                if (archiveInfo.IsZip && archiveInfo.HasRenameMap)
+                {
+                    UnFlattenCbz(workItem);
+                }
+                return;
             }
 
             if (!archiveInfo.IsZip || archiveInfo.IsCalibreArchive)
